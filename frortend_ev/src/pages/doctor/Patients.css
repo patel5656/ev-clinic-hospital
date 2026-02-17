@@ -1,0 +1,269 @@
+/* Doctor Patients Page - Exact Screenshot Design */
+
+.patients-page-header {
+    margin-bottom: 2rem;
+}
+
+.patients-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.5rem 0;
+}
+
+.patients-subtitle {
+    font-size: 0.9375rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* Filter Card */
+.patients-filter-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.search-bar-centered {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 1.125rem;
+}
+
+.search-input-large {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3.5rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.9375rem;
+    color: #1e293b;
+    transition: all 0.2s;
+    background: #f8fafc;
+}
+
+.search-input-large::placeholder {
+    color: #94a3b8;
+}
+
+.search-input-large:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(35, 40, 107, 0.05);
+}
+
+/* Filter Tabs */
+.filter-tabs {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.filter-tab {
+    padding: 0.625rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-tab:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.filter-tab.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Results Card */
+.patients-results-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    min-height: 400px;
+}
+
+/* Patients Grid */
+.patients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    /* Wider cards */
+    gap: 1.5rem;
+}
+
+.patient-card-modern {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.75rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    /* Smooth corners */
+    transition: all 0.2s ease;
+    align-items: flex-start;
+}
+
+.patient-card-modern:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    /* Softer shadow */
+    transform: translateY(-4px);
+}
+
+.patient-avatar-large {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    border-radius: 16px;
+    /* Squircle */
+    background: #f1f5f9;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    font-weight: 800;
+}
+
+.patient-info-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.patient-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.patient-meta {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+    font-weight: 500;
+}
+
+.patient-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+/* Last Visit Tag */
+.last-visit-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    background: #ecfdf5;
+    color: #059669;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 6px;
+    width: fit-content;
+}
+
+.patient-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 140px;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    border-radius: 8px;
+    width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .patients-filter-card {
+        padding: 1.25rem;
+    }
+
+    .search-bar-centered {
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-tabs {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    .filter-tab {
+        white-space: nowrap;
+        width: auto;
+    }
+
+    .patients-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .patient-card-modern {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .patient-info-block {
+        width: 100%;
+    }
+
+    .patient-actions {
+        width: 100%;
+        flex-direction: row;
+        margin-top: 1rem;
+    }
+}
+
+.btn-start-consulting-static {
+    background: #53589B !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    padding: 10px 24px !important;
+    cursor: default !important;
+    transition: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.btn-start-consulting-static:hover,
+.btn-start-consulting-static:active,
+.btn-start-consulting-static:focus {
+    background: #53589B !important;
+    transform: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}

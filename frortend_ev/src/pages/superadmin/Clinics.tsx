@@ -1,0 +1,594 @@
+import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
+import { useToast } from '../../context/ToastContext';
+import { FiPlus, FiSearch, FiEye, FiCheck, FiEdit, FiTrash2, FiPower, FiLogIn } from 'react-icons/fi';
+import Modal from '../../components/Modal';
+import ConfirmModal from '../../components/ConfirmModal';
+import './Clinics.css';
+
+const Clinics = () => {
+    const { loginAsClinic } = useAuth() as any;
+    const { clinics, addClinic, updateClinic, toggleClinicStatus, deleteClinic } = useApp() as any;
+    const toast = useToast();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [selectedClinic, setSelectedClinic] = useState<any>(null);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<any>(null);
+
+    const [clinicForm, setClinicForm] = useState({
+        name: '',
+        location: '',
+        contact: '',
+        email: '',
+        password: '',
+        subscriptionDuration: 1,
+        manualDays: 30,
+        subscriptionPlan: 'Monthly',
+        subscriptionAmount: 5000,
+        gstPercent: 18,
+        numberOfUsers: 5
+    });
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState('');
+
+    const filteredClinics = (clinics as any[]).filter(clinic =>
+        clinic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        clinic.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setLogoFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleCreateClinic = async (e: any) => {
+        e.preventDefault();
+        setErrorMessage('');
+        try {
+            const formData = new FormData();
+            Object.entries(clinicForm).forEach(([key, value]) => {
+                formData.append(key, value.toString());
+            });
+            if (logoFile) {
+                formData.append('logo', logoFile);
+            }
+
+            if (isEditMode && selectedClinic) {
+                await updateClinic(selectedClinic.id, formData);
+            } else {
+                await addClinic(formData);
+            }
+            setIsSuccess(true);
+            setTimeout(() => {
+                setIsSuccess(false);
+                setIsModalOpen(false);
+                setIsEditMode(false);
+                setSelectedClinic(null);
+                setLogoFile(null);
+                setLogoPreview(null);
+                setClinicForm({
+                    name: '',
+                    location: '',
+                    contact: '',
+                    email: '',
+                    password: '',
+                    subscriptionDuration: 1,
+                    manualDays: 30,
+                    subscriptionPlan: 'Monthly',
+                    subscriptionAmount: 5000,
+                    gstPercent: 18,
+                    numberOfUsers: 5
+                });
+            }, 2000);
+        } catch (error: any) {
+            console.error('Failed to save clinic:', error);
+            setErrorMessage(error.message || 'Failed to save clinic. Please try again.');
+        }
+    };
+
+
+    const handleEdit = (clinic: any) => {
+        setSelectedClinic(clinic);
+        setClinicForm({
+            name: clinic.name,
+            location: clinic.location,
+            contact: clinic.contact,
+            email: clinic.email,
+            password: '',
+            subscriptionDuration: 1,
+            manualDays: clinic.subscriptionDays || 30,
+            subscriptionPlan: clinic.subscriptionPlan || 'Monthly',
+            subscriptionAmount: clinic.subscriptionAmount || 0,
+            gstPercent: clinic.gstPercent || 18,
+            numberOfUsers: clinic.userLimit || 5
+        });
+        setLogoFile(null);
+        if (clinic.logo) {
+            setLogoPreview(clinic.logo.startsWith('http') ? clinic.logo : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${clinic.logo}`);
+        } else {
+            setLogoPreview(null);
+        }
+        setIsEditMode(true);
+        setIsModalOpen(true);
+    };
+
+
+    const handleToggleStatus = (clinic: any) => {
+        setConfirmAction({
+            type: 'toggle',
+            clinic,
+            title: `${clinic.status === 'active' ? 'Deactivate' : 'Activate'} Clinic?`,
+            message: `Are you sure you want to ${clinic.status === 'active' ? 'deactivate' : 'activate'} "${clinic.name}"? ${clinic.status === 'active' ? 'Users will lose access to this clinic.' : 'Users will regain access to this clinic.'}`,
+            variant: clinic.status === 'active' ? 'danger' : 'info'
+        });
+    };
+
+    const handleDelete = (clinic: any) => {
+        setConfirmAction({
+            type: 'delete',
+            clinic,
+            title: 'Delete Clinic?',
+            message: `Are you sure you want to permanently delete "${clinic.name}"? This action cannot be undone and all associated data will be lost.`,
+            variant: 'danger'
+        });
+    };
+
+    const handleConfirm = async () => {
+        try {
+            if (confirmAction?.type === 'toggle') {
+                await toggleClinicStatus(confirmAction.clinic.id);
+            } else if (confirmAction?.type === 'delete') {
+                await deleteClinic(confirmAction.clinic.id);
+            }
+            setConfirmAction(null);
+        } catch (error) {
+            console.error('Action failed:', error);
+            toast.error('Operation failed. Please try again.');
+        }
+    };
+
+    const handleViewDetails = (clinic: any) => {
+        setSelectedClinic(clinic);
+        setIsViewModalOpen(true);
+    };
+
+    const handleLoginAsAdmin = async (clinic: any) => {
+        await loginAsClinic(clinic);
+    };
+
+    // const { superService } = useApp() as any; // Ensure this is available or import it.
+    // Commenting out unused states to fix build
+    // const [clinicInsights, setClinicInsights] = useState<any>(null);
+    // const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+    // const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+    // const [resetData, setResetData] = useState({ userId: 0, newPassword: '' });
+
+    /*
+    const handleShowInsights = async (clinic: any) => {
+        try {
+            // const res: any = await superService.getClinicInsights(clinic.id);
+            // setClinicInsights(res.data);
+            // setIsInsightsOpen(true);
+        } catch (error) {
+            alert('Failed to fetch clinic insights');
+        }
+    };
+
+    const handleResetAdminPassword = (clinic: any) => {
+        alert('Password management for ' + clinic.email);
+    };
+    */
+
+    const openCreateModal = () => {
+        setIsEditMode(false);
+        setSelectedClinic(null);
+        setClinicForm({
+            name: '',
+            location: '',
+            contact: '',
+            email: '',
+            password: '',
+            subscriptionDuration: 1,
+            manualDays: 30,
+            subscriptionPlan: 'Trial', // Default to Trial for new registrations
+            subscriptionAmount: 0,
+            gstPercent: 0,
+            numberOfUsers: 5
+        });
+        setIsModalOpen(true);
+    };
+
+    return (
+        <div className="clinics-page fade-in">
+            <div className="page-header">
+                <div>
+                    <h1>Facility Management</h1>
+                    <p>Register and manage all clinical facilities on the platform.</p>
+                </div>
+                <button className="btn btn-primary btn-with-icon btn-no-hover" onClick={openCreateModal}>
+                    <FiPlus />
+                    <span>Register New Facility</span>
+                </button>
+            </div>
+
+            <div className="table-controls card">
+                <div className="search-box">
+                    <FiSearch />
+                    <input
+                        type="text"
+                        placeholder="Search clinics by name or location..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </div>
+
+            <div className="table-container card table-responsive">
+                <table className="data-table">
+                    <thead>
+                        <tr>
+                            <th>Facility Name</th>
+                            <th>Administrator</th>
+                            <th>Location</th>
+                            <th>Subscription</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredClinics.map((clinic: any) => (
+                            <tr key={clinic.id}>
+                                <td>
+                                    <div className="clinic-cell">
+                                        <span className="clickable" onClick={() => handleViewDetails(clinic)}>
+                                            {clinic.name || 'Unnamed Facility'}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div className="admin-info-cell">
+                                        <div className="admin-name">{clinic.adminName || 'Admin'}</div>
+                                        <div className="admin-email">{clinic.adminEmail || clinic.email || 'No Email'}</div>
+                                    </div>
+                                </td>
+                                <td>{clinic.location}</td>
+                                <td>
+                                    <div>{clinic.subscriptionPlan || 'Monthly'}</div>
+                                    <div style={{ fontSize: '0.8em', color: clinic.isExpired ? 'red' : 'green' }}>
+                                        {clinic.daysRemaining !== undefined ? `${clinic.daysRemaining} days left` : ''}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span className={`status-pill ${clinic.status}`}>
+                                        {clinic.status === 'active' ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td>{clinic.createdDate ? new Date(clinic.createdDate).toLocaleDateString() : 'N/A'}</td>
+                                <td>
+                                    <div className="action-btns">
+                                        <button className="btn-icon" onClick={() => handleLoginAsAdmin(clinic)} title="Login as Admin">
+                                            <FiLogIn style={{ color: '#2563EB' }} />
+                                        </button>
+
+                                        <button className="btn-icon" onClick={() => handleViewDetails(clinic)} title="View Details">
+                                            <FiEye />
+                                        </button>
+                                        <button className="btn-icon" onClick={() => handleEdit(clinic)} title="Edit">
+                                            <FiEdit />
+                                        </button>
+                                        <button
+                                            className="btn-icon"
+                                            onClick={() => handleToggleStatus(clinic)}
+                                            title={clinic.status === 'active' ? 'Deactivate' : 'Activate'}
+                                        >
+                                            <FiPower />
+                                        </button>
+                                        <button className="btn-icon delete" onClick={() => handleDelete(clinic)} title="Delete">
+                                            <FiTrash2 />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditMode ? "Edit Facility" : "Register New Facility"}>
+                {isSuccess ? (
+                    <div className="success-message text-center p-lg">
+                        <FiCheck size={48} color="#10B981" />
+                        <h3>Facility {isEditMode ? 'Updated' : 'Registered'}!</h3>
+                        <p>The clinic has been {isEditMode ? 'updated' : 'added to the network'}.</p>
+                    </div>
+                ) : (
+                    <form className="modal-form" onSubmit={handleCreateClinic}>
+                        {errorMessage && (
+                            <div className="alert alert-danger" style={{
+                                padding: '0.75rem',
+                                background: '#FEE2E2',
+                                border: '1px solid #EF4444',
+                                borderRadius: '8px',
+                                color: '#B91C1C',
+                                fontSize: '0.875rem',
+                                marginBottom: '1.25rem'
+                            }}>
+                                {errorMessage}
+                            </div>
+                        )}
+                        <div className="clinic-form-group">
+                            <label className="clinic-modal-label">Company/Clinic Logo Upload</label>
+                            <div className="logo-upload-container" style={{
+                                border: '2px dashed #E2E8F0',
+                                padding: '1.5rem',
+                                borderRadius: '12px',
+                                textAlign: 'center',
+                                background: '#F8FAFC',
+                                marginBottom: '1.5rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '1rem'
+                            }} onClick={() => document.getElementById('logo-upload')?.click()}>
+                                {logoPreview ? (
+                                    <div style={{ position: 'relative', width: '100px', height: '100px' }}>
+                                        <img src={logoPreview} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }} />
+                                        <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.5rem' }}>Click to change logo</div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div style={{ fontSize: '2rem', color: '#94A3B8' }}>+</div>
+                                        <div style={{ fontSize: '0.875rem', color: '#64748B' }}>
+                                            <strong>Browse File</strong> to upload clinic logo
+                                            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>PNG, JPG or JPEG (Max 5MB)</p>
+                                        </div>
+                                    </>
+                                )}
+                                <input
+                                    id="logo-upload"
+                                    type="file"
+                                    accept=".png,.jpg,.jpeg"
+                                    onChange={handleFileChange}
+                                    style={{ display: 'none' }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="clinic-form-group">
+                            <label className="clinic-modal-label">Clinic Name</label>
+                            <input className="clinic-modal-input" type="text" required value={clinicForm.name} onChange={e => setClinicForm({ ...clinicForm, name: e.target.value })} />
+                        </div>
+
+                        <div className="clinic-form-group">
+                            <label className="clinic-modal-label">Location / Address</label>
+                            <input className="clinic-modal-input" type="text" required value={clinicForm.location} onChange={e => setClinicForm({ ...clinicForm, location: e.target.value })} />
+                        </div>
+                        <div className="clinic-form-row">
+                            <div className="clinic-form-group">
+                                <label className="clinic-modal-label">Contact Email (Admin Login)</label>
+                                <input className="clinic-modal-input" type="email" required value={clinicForm.email} onChange={e => setClinicForm({ ...clinicForm, email: e.target.value })} />
+                            </div>
+                            <div className="clinic-form-group">
+                                <label className="clinic-modal-label">Contact Number</label>
+                                <input className="clinic-modal-input" type="text" required value={clinicForm.contact} onChange={e => setClinicForm({ ...clinicForm, contact: e.target.value })} />
+                            </div>
+                        </div>
+                        {!isEditMode && (
+                            <div className="clinic-form-group" style={{ marginBottom: '1.5rem' }}>
+                                <label className="clinic-modal-label">Admin Password (For first login)</label>
+                                <input className="clinic-modal-input" type="password" required value={clinicForm.password} onChange={e => setClinicForm({ ...clinicForm, password: e.target.value })} />
+                            </div>
+                        )}
+                        {!isEditMode && (
+                            <div className="clinic-form-row">
+                                <div className="clinic-form-group">
+                                    <label className="clinic-modal-label">Plan Type</label>
+                                    <select
+                                        className="clinic-modal-input"
+                                        value={clinicForm.subscriptionPlan}
+                                        onChange={e => {
+                                            const plan = e.target.value;
+                                            let amount = clinicForm.subscriptionAmount;
+                                            if (plan === 'Trial') amount = 0;
+                                            else if (plan === 'Monthly') amount = 5000 * clinicForm.subscriptionDuration;
+                                            setClinicForm({ ...clinicForm, subscriptionPlan: plan, subscriptionAmount: amount });
+                                        }}
+                                    >
+                                        <option value="Trial">Trial (7 Days)</option>
+                                        <option value="Manual">Manual Option</option>
+                                        <option value="Monthly">Select Months (1-12)</option>
+                                    </select>
+                                </div>
+                                {clinicForm.subscriptionPlan === 'Manual' && (
+                                    <div className="clinic-form-group">
+                                        <label className="clinic-modal-label">Manual Days</label>
+                                        <input
+                                            className="clinic-modal-input"
+                                            type="number"
+                                            min="1"
+                                            value={(clinicForm as any).manualDays}
+                                            onChange={e => setClinicForm({ ...clinicForm, manualDays: Number(e.target.value) } as any)}
+                                            placeholder="Enter days"
+                                            required
+                                        />
+                                    </div>
+                                )}
+                                <div className="clinic-form-group">
+                                    <label className="clinic-modal-label">Number of Users</label>
+                                    <input
+                                        className="clinic-modal-input"
+                                        type="number"
+                                        min="1"
+                                        value={(clinicForm as any).numberOfUsers || 1}
+                                        onChange={e => setClinicForm({ ...clinicForm, numberOfUsers: Number(e.target.value) } as any)}
+                                        required
+                                    />
+                                </div>
+                                {clinicForm.subscriptionPlan === 'Monthly' && (
+                                    <div className="clinic-form-group">
+                                        <label className="clinic-modal-label">Duration (Months)</label>
+                                        <select
+                                            className="clinic-modal-input"
+                                            value={clinicForm.subscriptionDuration}
+                                            onChange={e => {
+                                                const duration = Number(e.target.value);
+                                                setClinicForm({
+                                                    ...clinicForm,
+                                                    subscriptionDuration: duration,
+                                                    subscriptionAmount: 5000 * duration
+                                                });
+                                            }}
+                                        >
+                                            {[...Array(12).keys()].map(i => (
+                                                <option key={i + 1} value={i + 1}>
+                                                    {i + 1} Month{i !== 0 && 's'}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {!isEditMode && (
+                            <div className="clinic-form-row">
+                                <div className="clinic-form-group">
+                                    <label className="clinic-modal-label">Price Per User ($)</label>
+                                    <input
+                                        className="clinic-modal-input"
+                                        type="number"
+                                        value={clinicForm.subscriptionAmount || ''}
+                                        onChange={e => setClinicForm({ ...clinicForm, subscriptionAmount: e.target.value === '' ? 0 : Number(e.target.value) })}
+                                        disabled={clinicForm.subscriptionPlan === 'Trial'}
+                                        placeholder={clinicForm.subscriptionPlan === 'Trial' ? "Free" : "Enter amount"}
+                                        required
+                                    />
+                                </div>
+                                <div className="clinic-form-group">
+                                    <label className="clinic-modal-label">GST / Tax (%)</label>
+                                    <input
+                                        className="clinic-modal-input"
+                                        type="number"
+                                        value={clinicForm.gstPercent}
+                                        onChange={e => setClinicForm({ ...clinicForm, gstPercent: Number(e.target.value) })}
+                                        disabled={clinicForm.subscriptionPlan === 'Trial'}
+                                        placeholder="GST %"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        {!isEditMode && clinicForm.subscriptionPlan !== 'Trial' && (
+                            <div className="total-preview">
+                                <div className="preview-row">
+                                    <span>Base Amount:</span>
+                                    <span>${(clinicForm.subscriptionAmount * ((clinicForm as any).numberOfUsers || 1)).toFixed(2)}</span>
+                                </div>
+                                <div className="preview-row">
+                                    <span>GST ({clinicForm.gstPercent}%):</span>
+                                    <span>${((clinicForm.subscriptionAmount * ((clinicForm as any).numberOfUsers || 1)) * clinicForm.gstPercent / 100).toFixed(2)}</span>
+                                </div>
+                                <div className="preview-total">
+                                    <span>Total Payable:</span>
+                                    <span style={{ color: '#2D3BAE' }}>${((clinicForm.subscriptionAmount * ((clinicForm as any).numberOfUsers || 1)) * (1 + clinicForm.gstPercent / 100)).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        )}
+                        {!isEditMode && clinicForm.subscriptionPlan === 'Trial' && (
+                            <div className="text-center p-md" style={{ color: '#64748B', fontSize: '0.9rem' }}>
+                                <small>Trial period is free of charge ($0.00).</small>
+                            </div>
+                        )}
+                        <div className="modal-actions">
+                            <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                            <button type="submit" className="btn btn-primary btn-no-hover">{isEditMode ? 'Update' : 'Add'} Facility</button>
+                        </div>
+                    </form>
+                )}
+            </Modal>
+
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Facility Details">
+                {selectedClinic && (
+                    <div className="clinic-details">
+                        <div className="details-header" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                            {selectedClinic.logo && (
+                                <img
+                                    src={selectedClinic.logo.startsWith('http') ? selectedClinic.logo : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${selectedClinic.logo}`}
+                                    alt="Clinic Logo"
+                                    style={{ width: '80px', height: '80px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #E2E8F0' }}
+                                />
+                            )}
+                            <div>
+                                <h2>{selectedClinic.name}</h2>
+                                <p style={{ color: '#64748B', fontSize: '0.9rem' }}>{selectedClinic.location}</p>
+                            </div>
+                        </div>
+
+                        <div className="details-grid mt-lg">
+                            <div className="detail-item">
+                                <label>Location</label>
+                                <p>{selectedClinic.location}</p>
+                            </div>
+                            <div className="detail-item">
+                                <label>Contact</label>
+                                <p>{selectedClinic.contact}</p>
+                            </div>
+                            <div className="detail-item">
+                                <label>Email</label>
+                                <p>{selectedClinic.email}</p>
+                            </div>
+                            <div className="detail-item">
+                                <label>Subscription</label>
+                                <p>{selectedClinic.subscriptionPlan} ({selectedClinic.daysRemaining} days left)</p>
+                            </div>
+                            <div className="detail-item">
+                                <label>Status</label>
+                                <p><span className={`status-pill ${selectedClinic.status}`}>{selectedClinic.status}</span></p>
+                            </div>
+                            <div className="detail-item">
+                                <label>Created Date</label>
+                                <p>{selectedClinic.createdDate ? new Date(selectedClinic.createdDate).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* 
+            <Modal isOpen={isInsightsOpen} onClose={() => setIsInsightsOpen(false)} title="Clinic Performance Insights">
+                {clinicInsights && (
+                    <div className="clinic-insights">
+                        ... (Insights content) ...
+                    </div>
+                )}
+            </Modal>
+            */}
+
+            <ConfirmModal
+                isOpen={!!confirmAction}
+                onClose={() => setConfirmAction(null)}
+                onConfirm={handleConfirm}
+                title={confirmAction?.title || ''}
+                message={confirmAction?.message || ''}
+                variant={confirmAction?.variant || 'warning'}
+                confirmText={confirmAction?.type === 'delete' ? 'Delete' : 'Confirm'}
+            />
+        </div>
+    );
+};
+
+export default Clinics;

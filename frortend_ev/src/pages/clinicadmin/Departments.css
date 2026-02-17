@@ -1,0 +1,144 @@
+.departments-page {
+    padding-bottom: 2rem;
+}
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.stat-icon.clinical {
+    background: rgba(63, 70, 184, 0.1);
+    color: #3f46b8;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.table-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.search-box {
+    position: relative;
+    width: 300px;
+}
+
+.search-box svg {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+    border-color: #3f46b8;
+}
+
+.status-pill.clinical {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.status-pill.service {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.info-alert {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: #f8fafc;
+    border-left: 4px solid #3f46b8;
+    margin-bottom: 1.5rem;
+    border-radius: 4px;
+}
+
+.info-alert svg {
+    color: #3f46b8;
+    font-size: 1.25rem;
+}
+
+.info-alert strong {
+    display: block;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.info-alert p {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Stability for buttons */
+.btn-no-hover,
+.btn-no-hover:hover,
+.btn-no-hover:active,
+.btn-no-hover:focus {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    transition: none !important;
+    transform: none !important;
+    background: var(--primary-gradient) !important;
+    box-shadow: var(--shadow-md) !important;
+    color: var(--white) !important;
+}
+
+.btn-no-hover::before,
+.btn-no-hover::after {
+    display: none !important;
+}

@@ -1,0 +1,85 @@
+/* ===================================
+   APP COMPONENT STYLES
+   =================================== */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* Smooth scroll offset for fixed header */
+html {
+  scroll-padding-top: 100px;
+}
+
+body {
+  padding-top: 0;
+}
+
+/* Selection color */
+::selection {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+::-moz-selection {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+/* --- PROFESSIONAL PRINT STYLES --- */
+/* --- PROFESSIONAL PRINT STYLES --- */
+@media print {
+
+  /* Professional A4 Print Layout */
+  @page {
+    margin: 10mm;
+    size: A4;
+  }
+
+  body {
+    visibility: hidden;
+    background-color: white !important;
+    height: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure the print container represents the page */
+  .invoice-print-layout {
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    z-index: 99999 !important;
+    display: block !important;
+  }
+
+  /* Ensure all children are visible */
+  .invoice-print-layout * {
+    visibility: visible !important;
+  }
+
+  /* Explicitly hide non-print elements to prevent layout issues */
+  #root>*:not(.invoice-print-layout),
+  .sidebar,
+  .dashboard-layout,
+  .dashboard-nav,
+  .header,
+  .modal-overlay,
+  .toast-container {
+    display: none !important;
+  }
+}
