@@ -370,6 +370,17 @@
     margin: 3rem auto;
 }
 
+@media (max-width: 768px) {
+    .confirmation-view {
+        margin: 1.5rem auto;
+        padding: 0 1rem;
+    }
+
+    .success-card {
+        padding: 2rem 1.5rem !important;
+    }
+}
+
 .success-card {
     padding: 3rem;
     background: var(--white);
@@ -845,7 +856,30 @@
 
 @media (max-width: 768px) {
     .patient-booking-form-page {
-        padding: 0 1rem;
+        padding: 0 1.25rem;
+    }
+
+    .patient-booking-form-card {
+        padding: 2rem 1.5rem;
+        border-radius: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .patient-booking-form-page {
+        padding: 0 0.75rem;
+    }
+
+    .patient-booking-form-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .patient-booking-title {
+        font-size: 1.5rem;
+    }
+
+    .patient-booking-subtitle {
+        font-size: 0.875rem;
     }
 }
 
@@ -875,16 +909,16 @@
     border: 1px solid #f1f5f9;
 }
 
-@media (max-width: 768px) {
-    .patient-booking-form-card {
-        padding: 1.5rem;
-    }
-}
-
 .patient-booking-form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem 2.5rem;
+}
+
+@media (max-width: 1024px) {
+    .patient-booking-form-grid {
+        gap: 1.5rem 2rem;
+    }
 }
 
 @media (max-width: 768px) {
@@ -899,6 +933,22 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+
+    .patient-booking-form-left,
+    .patient-booking-form-right {
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .patient-booking-form-left,
+    .patient-booking-form-right {
+        gap: 1rem;
+    }
 }
 
 .patient-booking-form-group {
@@ -1041,6 +1091,19 @@
 .patient-booking-submit-icon {
     font-size: 1.25rem;
     flex-shrink: 0;
+}
+
+.phone-grid-responsive {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+@media (max-width: 480px) {
+    .phone-grid-responsive {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Public Clinic-Specific Booking Page Styles */

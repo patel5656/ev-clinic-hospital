@@ -7,6 +7,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { billingService } from '../../services/billing.service';
 import Modal from '../../components/Modal';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { addClinicHeader } from '../../utils/pdfUtils';
 import './Dashboard.css';
 
 const CURRENCIES = [
@@ -171,26 +174,63 @@ const Billing = () => {
         }
     };
 
-    const exportToCSV = () => {
-        const headers = ['Invoice ID', 'Date', 'Patient Name', 'Service', `Amount (${currency})`, 'Status'];
-        const rows = clinicInvoices.map((inv: any) => {
+    const exportToPDF = async () => {
+        const doc = new jsPDF();
+
+        // Add Professional Branding Header with Logo
+        const startY = await addClinicHeader(doc, selectedClinic, 'Revenue & Billing Report');
+
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, startY + 5);
+        doc.text(`Total Records: ${clinicInvoices.length}`, 14, startY + 10);
+        doc.text(`Total Collected: ${currency} ${totalCollected.toLocaleString()}`, 14, startY + 15);
+
+        // Map data for table
+        const tableBody = clinicInvoices.map((inv: any) => {
             const patient = (patients as any[]).find((p: any) => p.id === Number(inv.patientId)) || { name: 'Unknown' };
             return [
                 inv.id,
-                inv.date,
+                new Date(inv.date).toLocaleDateString(),
                 patient.name,
                 inv.service,
-                inv.amount,
+                `${currency} ${inv.amount}`,
                 inv.status
             ];
         });
 
-        const csvContent = [headers.join(','), ...rows.map((row: any) => row.join(','))].join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `invoices_${selectedClinic?.name || 'clinic'}_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
+        // Generate Table
+        autoTable(doc, {
+            startY: startY + 25,
+            head: [['Invoice #', 'Date', 'Patient Name', 'Service', 'Amount', 'Status']],
+            body: tableBody,
+            headStyles: {
+                fillColor: [45, 59, 174], // #2D3BAE
+                textColor: [255, 255, 255],
+                fontSize: 10,
+                fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+                fillColor: [248, 250, 252]
+            },
+            styles: {
+                fontSize: 8,
+                cellPadding: 3,
+                overflow: 'linebreak'
+            },
+            columnStyles: {
+                0: { cellWidth: 25 },
+                1: { cellWidth: 25 },
+                2: { cellWidth: 40 },
+                3: { cellWidth: 'auto' },
+                4: { cellWidth: 30 },
+                5: { cellWidth: 25 }
+            },
+            theme: 'striped'
+        });
+
+        // Save PDF
+        doc.save(`invoices-${selectedClinic?.name?.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     const pendingPatients = patients.filter((p: any) => p.status === 'Pending Payment' || (p.assessments && p.assessments.some((a: any) => a.isClosed && !a.isBilled)));
@@ -203,9 +243,9 @@ const Billing = () => {
                     <p>Generate invoices and track patient payments.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button className="btn btn-secondary btn-with-icon" onClick={exportToCSV}>
+                    <button className="btn btn-secondary btn-with-icon" onClick={exportToPDF}>
                         <FiDownload />
-                        <span>Export CSV</span>
+                        <span>Export PDF</span>
                     </button>
                     <button className="btn btn-primary btn-with-icon btn-no-hover" onClick={() => {
                         if ((patients as any[])?.length === 0) refreshData?.();
@@ -369,13 +409,12 @@ const Billing = () => {
                                 value={newInvoice.patientId}
                                 onChange={e => setNewInvoice({ ...newInvoice, patientId: e.target.value })}
                             >
-
+                                <option value="">Select Patient</option>
                                 {(patients as any[])
                                     .filter((p: any) => !isPatientLocked || p.id.toString() === newInvoice.patientId)
                                     .map((p: any) => (
                                         <option key={p.id} value={p.id}>{p.id.toString().padStart(3, '0')}-{p.name || 'Unknown'}</option>
                                     ))}
-
                             </select>
                         </div>
                         <div className="form-group">

@@ -278,6 +278,19 @@
     justify-content: center;
     transition: all var(--transition-fast);
     border-radius: 50%;
+    position: relative;
+}
+
+.notification-dot {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 8px;
+    height: 8px;
+    background-color: #EF4444;
+    border-radius: 50%;
+    border: 1.5px solid #FFFFFF;
+    pointer-events: none;
 }
 
 .notification-btn:hover {
@@ -595,11 +608,18 @@
     letter-spacing: 0.5px;
 }
 
+@media (max-width: 900px) {
+    .user-role-label {
+        display: none;
+    }
+}
+
 .user-role-label {
     font-size: 0.875rem;
     font-weight: 500;
     color: #64748B;
     margin-right: 0.25rem;
+    white-space: nowrap;
 }
 
 .ev-platform-pill {
@@ -667,7 +687,38 @@
     max-width: 500px;
 }
 
-.patient-nav .user-avatar {
-    background: #1E1B4B;
-    border: 2px solid #E2E8F0;
+@media (max-width: 768px) {
+    .topbar {
+        padding: 0 1rem;
+    }
+
+    .clinic-name,
+    .ev-platform-pill span {
+        display: none;
+    }
+
+    .clinic-selector,
+    .ev-platform-pill {
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .topbar-right {
+        gap: 0.5rem;
+    }
+
+    .user-name {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar-left {
+        gap: 0.5rem;
+    }
+
+    .mobile-toggle {
+        width: 36px;
+        height: 36px;
+    }
 }

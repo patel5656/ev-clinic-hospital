@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { FiFileText, FiSearch, FiDownload, FiFilter } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { addClinicHeader } from '../../utils/pdfUtils';
 import './ClinicAuditLogs.css';
 
 const ClinicAuditLogs = () => {
@@ -28,24 +31,61 @@ const ClinicAuditLogs = () => {
         return matchesSearch && matchesFilter;
     });
 
-    const handleExport = () => {
-        const csv = [
-            ['Timestamp', 'Action', 'Performed By', 'IP Address', 'Details'].join(','),
-            ...clinicLogs.map((log: any) => [
-                log.timestamp,
-                log.action,
-                log.performedBy,
-                log.ipAddress,
-                JSON.stringify(log.details)
-            ].join(','))
-        ].join('\n');
+    const handleExport = async () => {
+        const doc = new jsPDF();
 
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `clinic-audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
+        // Add Professional Branding Header with Logo
+        const startY = await addClinicHeader(doc, selectedClinic, 'Clinic Audit Log Report');
+
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, startY + 5);
+        doc.text(`Total Records: ${clinicLogs.length}`, 14, startY + 10);
+
+        // Map data for table
+        const tableBody = clinicLogs.map((log: any) => [
+            new Date(log.timestamp).toLocaleString(),
+            log.action,
+            log.performedBy,
+            log.ipAddress || 'N/A',
+            typeof log.details === 'object' && log.details
+                ? Object.entries(log.details)
+                    .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+                    .join('\n')
+                : log.details || 'N/A'
+        ]);
+
+        // Generate Table
+        autoTable(doc, {
+            startY: startY + 20,
+            head: [['Timestamp', 'Action', 'Performed By', 'IP Address', 'Details']],
+            body: tableBody,
+            headStyles: {
+                fillColor: [45, 59, 174], // #2D3BAE
+                textColor: [255, 255, 255],
+                fontSize: 10,
+                fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+                fillColor: [248, 250, 252]
+            },
+            styles: {
+                fontSize: 8,
+                cellPadding: 3,
+                overflow: 'linebreak'
+            },
+            columnStyles: {
+                0: { cellWidth: 35 },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 30 },
+                3: { cellWidth: 25 },
+                4: { cellWidth: 'auto' }
+            },
+            theme: 'striped'
+        });
+
+        // Save PDF
+        doc.save(`${selectedClinic?.name?.toLowerCase().replace(/\s+/g, '-')}-audit-logs-${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     return (

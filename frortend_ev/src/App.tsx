@@ -47,6 +47,7 @@ import Calendar from './pages/reception/Calendar';
 import Bookings from './pages/reception/Bookings';
 import PatientManagement from './pages/reception/Patients';
 import Billing from './pages/reception/Billing';
+import TokenQueue from './pages/reception/TokenQueue';
 
 // Doctor Pages
 import DoctorDashboard from './pages/doctor/Dashboard';
@@ -59,6 +60,7 @@ import MedicalReport from './pages/doctor/MedicalReport';
 // Public Pages
 // Patient Pages
 import PatientDashboard from './pages/patient/Dashboard';
+import PatientRecords from './pages/patient/PatientRecords';
 import BookAppointment from './pages/patient/BookAppointment';
 import AppointmentStatus from './pages/patient/AppointmentStatus';
 import PatientSettings from './pages/patient/Settings';
@@ -80,6 +82,7 @@ import RadiologyRequests from './pages/radiologist/RadiologyRequests';
 import RadiologyUploadImages from './pages/radiologist/RadiologyUploadImages';
 import RadiologyUploadReport from './pages/radiologist/RadiologyUploadReport';
 import RadiologyHistory from './pages/radiologist/RadiologyHistory';
+import RadiologyReports from './pages/radiologist/RadiologyReports';
 import PharmacyDashboard from './pages/pharmacy/PharmacyDashboard';
 import PharmacyPrescriptions from './pages/pharmacy/PharmacyPrescriptions';
 import PharmacyMedicineSale from './pages/pharmacy/PharmacyMedicineSale';
@@ -92,6 +95,7 @@ import LabSampleCollection from './pages/laboratory/LabSampleCollection';
 import LabEnterResults from './pages/laboratory/LabEnterResults';
 import LabUploadReport from './pages/laboratory/LabUploadReport';
 import LabHistory from './pages/laboratory/LabHistory';
+import LabReports from './pages/laboratory/LabReports';
 
 import './App.css';
 import FromLinkBookAppointment from './pages/patient/FromLinkBookAppointment';
@@ -192,6 +196,7 @@ function App() {
                         <Route path="bookings" element={<Bookings />} />
                         <Route path="patients" element={<PatientManagement />} />
                         <Route path="billing" element={<Billing />} />
+                        <Route path="token-queue" element={<TokenQueue />} />
                       </Routes>
                     </DashboardLayout>
                   </ProtectedRoute>
@@ -225,6 +230,7 @@ function App() {
                         <Route index element={<PatientDashboard />} />
                         <Route path="book" element={<BookAppointment />} />
                         <Route path="status" element={<AppointmentStatus />} />
+                        <Route path="reports" element={<PatientRecords />} />
                         <Route path="settings" element={<PatientSettings />} />
                         <Route path="help" element={<HelpSupport />} />
                       </Routes>
@@ -246,6 +252,7 @@ function App() {
                         <Route path="enter-results" element={<LabEnterResults />} />
                         <Route path="upload-report" element={<LabUploadReport />} />
                         <Route path="history" element={<LabHistory />} />
+                        <Route path="reports" element={<LabReports />} />
                       </Routes>
                     </DashboardLayout>
                   </ProtectedRoute>
@@ -262,6 +269,7 @@ function App() {
                         <Route path="upload-images" element={<RadiologyUploadImages />} />
                         <Route path="upload-report" element={<RadiologyUploadReport />} />
                         <Route path="history" element={<RadiologyHistory />} />
+                        <Route path="reports" element={<RadiologyReports />} />
                       </Routes>
                     </DashboardLayout>
                   </ProtectedRoute>

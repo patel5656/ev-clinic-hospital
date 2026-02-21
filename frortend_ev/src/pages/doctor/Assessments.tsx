@@ -657,12 +657,7 @@ const Assessments = () => {
                     {selectedTemplateId ? (
                         <>
                             {/* Visit Info Header */}
-                            {currentAppointment?.notes && (
-                                <div className="visit-info-card mb-lg p-md" style={{ background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#64748B' }}>Visit Reason</h4>
-                                    <p style={{ margin: 0, fontWeight: 500, color: '#1E293B' }}>{currentAppointment.notes}</p>
-                                </div>
-                            )}
+
 
                             <div className="standard-clinical-fields mb-xl">
                                 <h4 className="section-title-clinical">Clinical Diagnosis</h4>
@@ -860,12 +855,12 @@ const Assessments = () => {
                                                     </>
                                                 )}
                                                 <div className="order-col-instr">
-                                                    <input
-                                                        type="text"
+                                                    <textarea
                                                         className="compact-input"
-                                                        placeholder="Instructions / Dosage..."
+                                                        placeholder="Full Instructions / Dosage / Frequency..."
+                                                        rows={3}
                                                         value={order.details || ''}
-                                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateOrder(index, 'details', e.target.value)}
+                                                        onChange={(e) => updateOrder(index, 'details', e.target.value)}
                                                     />
                                                 </div>
                                                 <button

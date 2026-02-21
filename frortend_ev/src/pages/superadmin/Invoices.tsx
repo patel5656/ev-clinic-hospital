@@ -416,7 +416,7 @@ const Invoices = () => {
 
                         <div className="modal-actions mt-xl d-flex gap-md no-print" style={{ background: 'white', position: 'sticky', bottom: 0, paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
                             <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setIsModalOpen(false)}>Close Window</button>
-                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={handlePrintInvoice}>
+                            <button className="btn btn-primary btn-no-hover" style={{ flex: 1 }} onClick={handlePrintInvoice}>
                                 <FiFileText style={{ marginRight: '8px' }} /> Print Invoice
                             </button>
                         </div>

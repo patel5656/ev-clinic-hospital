@@ -247,22 +247,48 @@
     border-radius: 12px;
     padding: 1.25rem;
     transition: all 0.2s;
+    gap: 1rem;
 }
 
-.doctor-dashboard-appointment-card:hover {
-    border-color: #2563eb;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
-    transform: translateY(-1px);
-}
+@media (max-width: 768px) {
+    .doctor-dashboard-appointment-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+    }
 
-.doctor-dashboard-appointment-time {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    min-width: 80px;
-    padding-right: 1.5rem;
-    border-right: 1px solid #f1f5f9;
+    .doctor-dashboard-appointment-time {
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 1px solid #f1f5f9;
+        padding-right: 0;
+        padding-bottom: 0.75rem;
+        min-width: 0;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .doctor-dashboard-appointment-patient-info {
+        padding-left: 0;
+        margin-top: 0.5rem;
+    }
+
+    .doctor-dashboard-appointment-status {
+        padding: 0;
+        margin-top: 0.5rem;
+    }
+
+    .doctor-dashboard-appointment-actions {
+        padding-left: 0;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .doctor-dashboard-btn-start-assessment {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .doctor-dashboard-time-text {

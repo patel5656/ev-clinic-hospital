@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { FiFileText, FiSearch, FiDownload, FiFilter } from 'react-icons/fi';
 import { superService } from '../../services/super.service';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import './AuditLogs.css';
 
 const AuditLogs = () => {
@@ -30,23 +32,70 @@ const AuditLogs = () => {
     };
 
     const handleExport = () => {
-        const csv = [
-            ['Timestamp', 'Action', 'Performed By', 'IP Address', 'Details'].join(','),
-            ...auditLogs.map((log: any) => [
-                new Date(log.timestamp).toISOString(),
-                log.action,
-                log.performedBy,
-                log.ipAddress || 'N/A',
-                JSON.stringify(log.details || {})
-            ].join(','))
-        ].join('\n');
+        const doc = new jsPDF();
 
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
+        // Add Professional Header
+        doc.setFontSize(22);
+        doc.setTextColor(45, 59, 174); // #2D3BAE Indigo color
+        doc.text('EV Clinic Hospital OS', 14, 20);
+
+        doc.setFontSize(14);
+        doc.setTextColor(100);
+        doc.text('System Audit Log Report', 14, 30);
+
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 40);
+        doc.text(`Total Records: ${auditLogs.length}`, 14, 45);
+
+        // Add a horizontal line
+        doc.setDrawColor(226, 232, 240);
+        doc.line(14, 50, 196, 50);
+
+        // Map data for table
+        const tableBody = auditLogs.map((log: any) => [
+            new Date(log.timestamp).toLocaleString(),
+            log.action,
+            log.performedBy,
+            log.ipAddress || 'N/A',
+            typeof log.details === 'object' && log.details
+                ? Object.entries(log.details)
+                    .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+                    .join('\n')
+                : log.details || 'N/A'
+        ]);
+
+        // Generate Table
+        autoTable(doc, {
+            startY: 55,
+            head: [['Timestamp', 'Action', 'Performed By', 'IP Address', 'Details']],
+            body: tableBody,
+            headStyles: {
+                fillColor: [45, 59, 174], // #2D3BAE
+                textColor: [255, 255, 255],
+                fontSize: 10,
+                fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+                fillColor: [248, 250, 252] // light background for readability
+            },
+            styles: {
+                fontSize: 8,
+                cellPadding: 3,
+                overflow: 'linebreak'
+            },
+            columnStyles: {
+                0: { cellWidth: 35 }, // Timestamp
+                1: { cellWidth: 40 }, // Action
+                2: { cellWidth: 30 }, // Performed By
+                3: { cellWidth: 25 }, // IP
+                4: { cellWidth: 'auto' } // Details
+            },
+            theme: 'striped'
+        });
+
+        // Save PDF
+        doc.save(`audit-logs-${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     return (

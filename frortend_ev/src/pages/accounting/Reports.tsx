@@ -3,6 +3,9 @@ import { FiDownload, FiFilter, FiCalendar, FiSearch } from 'react-icons/fi';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import '../reception/Dashboard.css';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { addClinicHeader } from '../../utils/pdfUtils';
 
 const AccountingReports = () => {
     const { invoices, patients } = useApp() as any;
@@ -31,34 +34,79 @@ const AccountingReports = () => {
         return matchesStatus && matchesSearch && matchesDate;
     });
 
-    const exportToCSV = () => {
-        const headers = ['Invoice ID', 'Date', 'Patient Name', 'Service', 'Amount (AED)', 'Status'];
-        const rows = filteredInvoices.map(inv => {
-            const patient = (patients || []).find((p: any) => p.id === Number(inv.patientId));
-            return [
-                inv.id,
-                inv.date,
-                patient?.name || 'Unknown',
-                inv.service,
-                inv.amount,
-                inv.status
-            ];
-        });
+    const exportToCSV = async () => {
+        try {
+            const doc = new jsPDF();
 
-        const csvContent = [
-            headers.join(','),
-            ...rows.map(row => row.join(','))
-        ].join('\n');
+            // Add professional header
+            await addClinicHeader(doc, selectedClinic, 'Financial Report');
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `reports_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            // Define columns and data
+            const tableColumn = ["Date", "Invoice #", "Patient", "Service", "Amount", "Status"];
+            const tableRows: any[] = [];
+
+            filteredInvoices.forEach((inv: any) => {
+                const patient = (patients || []).find((p: any) => p.id === Number(inv.patientId));
+                const invoiceData = [
+                    inv.date ? new Date(inv.date).toLocaleDateString() : '-',
+                    inv.id,
+                    patient?.name || 'Unknown',
+                    inv.service,
+                    `AED ${inv.amount}`,
+                    inv.status
+                ];
+                tableRows.push(invoiceData);
+            });
+
+            // Add autoTable
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 45, // Start after the header
+                theme: 'grid',
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    overflow: 'linebreak'
+                },
+                headStyles: {
+                    fillColor: [30, 41, 59], // Dark slate blue
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [241, 245, 249] // Slate 100
+                },
+                columnStyles: {
+                    0: { cellWidth: 25 }, // Date
+                    1: { cellWidth: 30 }, // Invoice #
+                    2: { cellWidth: 35 }, // Patient
+                    3: { cellWidth: 40 }, // Service
+                    4: { cellWidth: 25 }, // Amount
+                    5: { cellWidth: 25 }  // Status
+                }
+            });
+
+            // Add footer with page numbers
+            const pageCount = doc.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(100);
+                doc.text(
+                    `Page ${i} of ${pageCount}`,
+                    doc.internal.pageSize.width / 2,
+                    doc.internal.pageSize.height - 10,
+                    { align: 'center' }
+                );
+            }
+
+            // Save PDF
+            doc.save(`financial_report_${new Date().toISOString().split('T')[0]}.pdf`);
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            alert("Failed to generate PDF. Please try again.");
+        }
     };
 
     return (

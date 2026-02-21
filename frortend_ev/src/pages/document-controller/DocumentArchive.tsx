@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiList, FiRefreshCw, FiEye, FiDownload } from 'react-icons/fi';
+import { FiList, FiEye, FiDownload } from 'react-icons/fi';
 import { documentService } from '../../services/document.service';
 import Modal from '../../components/Modal';
 import '../SharedDashboard.css';
@@ -36,7 +36,7 @@ const downloadRecord = (r: any) => {
 const DocumentArchive = () => {
     const [records, setRecords] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+
     const [viewRecord, setViewRecord] = useState<any>(null);
 
     // Filter & Sort States
@@ -46,14 +46,14 @@ const DocumentArchive = () => {
 
     const fetchRecords = async () => {
         try {
-            setRefreshing(true);
+
             const res: any = await documentService.getRecords({ archived: true });
             setRecords(res?.data ?? res ?? []);
         } catch (error) {
             console.error('Failed to fetch records:', error);
         } finally {
             setLoading(false);
-            setRefreshing(false);
+
         }
     };
 
@@ -90,10 +90,7 @@ const DocumentArchive = () => {
                     <h1>Archive</h1>
                     <p>Archived documents and closed records.</p>
                 </div>
-                <button className="btn btn-secondary btn-sm btn-with-icon" onClick={fetchRecords} disabled={refreshing}>
-                    <FiRefreshCw className={refreshing ? 'spin' : ''} />
-                    <span>Refresh</span>
-                </button>
+
             </div>
             <div className="content-card">
                 <div className="card-header">

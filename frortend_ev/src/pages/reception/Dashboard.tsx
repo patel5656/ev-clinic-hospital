@@ -72,7 +72,7 @@ const ReceptionDashboard = () => {
         { label: "Today's Appointments", value: todaysBookings.length, icon: <FiCalendar />, color: '#3F46B8', path: '/reception/bookings' },
         { label: 'Total Patients', value: patients?.length || 0, icon: <FiUsers />, color: '#10B981', path: '/reception/patients' },
         { label: 'Pending Approvals', value: pendingRequests.length, icon: <FiActivity />, color: '#F59E0B', path: '/reception/bookings?status=pending' },
-        { label: 'Token Queue', value: activeQueue, icon: <FiCheck />, color: '#8B5CF6', path: '/reception/bookings' },
+        { label: 'Token Queue', value: activeQueue, icon: <FiCheck />, color: '#8B5CF6', path: '/reception/token-queue' },
     ];
 
     // Filter patients by active clinic

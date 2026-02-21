@@ -17,7 +17,7 @@ const PharmacyReports = () => {
             setReport(res.data || res);
         } catch (error: any) {
             console.error(error);
-            toast.error(error?.response?.data?.message || 'Failed to fetch reports');
+            toast.error(error?.message || 'Failed to fetch reports');
         } finally {
             setLoading(false);
         }

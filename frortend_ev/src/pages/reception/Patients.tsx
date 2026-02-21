@@ -6,6 +6,9 @@ import { receptionService } from '../../services/reception.service';
 import Modal from '../../components/Modal';
 import PatientProfileModal from '../../components/PatientProfileModal';
 import './Patients.css';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { addClinicHeader } from '../../utils/pdfUtils';
 
 const PatientManagement = () => {
     const { patients, staff, addPatient, addBooking, logAction } = useApp() as any;
@@ -74,34 +77,82 @@ const PatientManagement = () => {
         return matchesSearch && matchesStatus && matchesYear;
     });
 
-    const exportToCSV = () => {
-        // --- CSV EXPORT ---
-        const headers = ['ID', 'Name', 'Email', 'Phone', 'Gender', 'Status', 'Registered Date'];
-        const csvRows = [];
-        csvRows.push(headers.join(','));
 
-        filteredPatients.forEach((p: any) => {
-            const row = [
-                `"P-${p.id}"`, // ID
-                `"${p.name}"`, // Name
-                `"${p.email || ''}"`, // Email
-                `"${p.phone || ''}"`, // Phone
-                `"${p.gender || ''}"`, // Gender
-                `"${p.status || 'Active'}"`, // Status
-                `"${p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}"` // Date
-            ];
-            csvRows.push(row.join(','));
-        });
 
-        const csvContent = csvRows.join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `patients_export_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const exportToCSV = async () => {
+        try {
+            const doc = new jsPDF();
+
+            // Add professional header
+            await addClinicHeader(doc, selectedClinic, 'Patient Registry Report');
+
+            // Define columns and data
+            const tableColumn = ["ID", "Name", "Phone", "Email", "Gender", "Status", "Registered Date"];
+            const tableRows: any[] = [];
+
+            filteredPatients.forEach((p: any) => {
+                const patientData = [
+                    `P-${p.id}`,
+                    p.name || 'Unknown',
+                    p.phone || '-',
+                    p.email || '-',
+                    p.gender || '-',
+                    p.status || 'Active',
+                    p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-'
+                ];
+                tableRows.push(patientData);
+            });
+
+            // Add autoTable
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 45, // Start after the header
+                theme: 'grid',
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    overflow: 'linebreak'
+                },
+                headStyles: {
+                    fillColor: [30, 41, 59], // Dark slate blue
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [241, 245, 249] // Slate 100
+                },
+                columnStyles: {
+                    0: { cellWidth: 20 }, // ID
+                    1: { cellWidth: 35 }, // Name
+                    2: { cellWidth: 25 }, // Phone
+                    3: { cellWidth: 40 }, // Email
+                    4: { cellWidth: 20 }, // Gender
+                    5: { cellWidth: 25 }, // Status
+                    6: { cellWidth: 25 }  // Date
+                }
+            });
+
+            // Add footer with page numbers
+            const pageCount = doc.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(100);
+                doc.text(
+                    `Page ${i} of ${pageCount}`,
+                    doc.internal.pageSize.width / 2,
+                    doc.internal.pageSize.height - 10,
+                    { align: 'center' }
+                );
+            }
+
+            // Save PDF
+            doc.save(`patients_export_${new Date().toISOString().split('T')[0]}.pdf`);
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            alert("Failed to generate PDF. Please try again.");
+        }
     };
 
     const handlePrintPDF = () => {
@@ -330,38 +381,36 @@ const PatientManagement = () => {
                         <label>Full Name *</label>
                         <input type="text" placeholder="John Doe" required value={registrationForm.name} onChange={e => setRegistrationForm({ ...registrationForm, name: e.target.value })} />
                     </div>
-                    <div className="form-grid grid-2">
-                        <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '0.75rem' }}>
-                            <div className="form-group">
-                                <label style={{ fontSize: '0.75rem' }}>Code *</label>
-                                <input
-                                    type="text"
-                                    placeholder="+971"
-                                    style={{ textAlign: 'center', padding: '0.6rem 0.5rem' }}
-                                    value={registrationForm.phone.includes(' ') ? registrationForm.phone.split(' ')[0] : '+971'}
-                                    onChange={e => {
-                                        const currentNumber = registrationForm.phone.includes(' ')
-                                            ? registrationForm.phone.split(' ').slice(1).join(' ')
-                                            : registrationForm.phone;
-                                        setRegistrationForm({ ...registrationForm, phone: `${e.target.value} ${currentNumber}` });
-                                    }}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Mobile Number *</label>
-                                <input
-                                    type="text"
-                                    placeholder="50 123 4567"
-                                    required
-                                    value={registrationForm.phone.includes(' ') ? (registrationForm.phone.split(' ')[0] === '+971' && !registrationForm.phone.includes(' ') ? registrationForm.phone : registrationForm.phone.split(' ').slice(1).join(' ')) : registrationForm.phone.replace('+971', '').trim()}
-                                    onChange={e => {
-                                        const currentCode = registrationForm.phone.includes(' ')
-                                            ? registrationForm.phone.split(' ')[0]
-                                            : '+971';
-                                        setRegistrationForm({ ...registrationForm, phone: `${currentCode} ${e.target.value}` });
-                                    }}
-                                />
-                            </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: '1rem', alignItems: 'start' }}>
+                        <div className="form-group">
+                            <label style={{ fontSize: '0.75rem' }}>Code *</label>
+                            <input
+                                type="text"
+                                placeholder="+971"
+                                style={{ textAlign: 'center', padding: '0.6rem 0.5rem' }}
+                                value={registrationForm.phone.includes(' ') ? registrationForm.phone.split(' ')[0] : '+971'}
+                                onChange={e => {
+                                    const currentNumber = registrationForm.phone.includes(' ')
+                                        ? registrationForm.phone.split(' ').slice(1).join(' ')
+                                        : registrationForm.phone;
+                                    setRegistrationForm({ ...registrationForm, phone: `${e.target.value} ${currentNumber}` });
+                                }}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Mobile Number *</label>
+                            <input
+                                type="text"
+                                placeholder="50 123 4567"
+                                required
+                                value={registrationForm.phone.includes(' ') ? (registrationForm.phone.split(' ')[0] === '+971' && !registrationForm.phone.includes(' ') ? registrationForm.phone : registrationForm.phone.split(' ').slice(1).join(' ')) : registrationForm.phone.replace('+971', '').trim()}
+                                onChange={e => {
+                                    const currentCode = registrationForm.phone.includes(' ')
+                                        ? registrationForm.phone.split(' ')[0]
+                                        : '+971';
+                                    setRegistrationForm({ ...registrationForm, phone: `${currentCode} ${e.target.value}` });
+                                }}
+                            />
                         </div>
                         <div className="form-group">
                             <label>Email</label>

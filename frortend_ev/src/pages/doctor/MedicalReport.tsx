@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiDownload, FiArrowLeft, FiPrinter, FiCalendar, FiUser, FiActivity } from 'react-icons/fi';
+import { FiDownload, FiArrowLeft, FiActivity } from 'react-icons/fi';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import { addClinicHeader } from '../../utils/pdfUtils';
 import './MedicalReport.css';
 
 const MedicalReport = () => {
@@ -32,42 +33,27 @@ const MedicalReport = () => {
         }
     }, [state]);
 
-    const handlePrint = () => {
-        window.print();
-    };
 
-    const handleDownloadPDF = () => {
+
+    const handleDownloadPDF = async () => {
         if (!reportData) return;
 
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        // Header - Clinic Info
-        if (selectedClinic?.logo) {
-            // Ideally we would add the logo here if we have base64 or a public URL
-            // doc.addImage(...)
-        }
-
-        doc.setFontSize(22);
-        doc.setTextColor(35, 40, 107); // Primary color
-        doc.text(selectedClinic?.name || 'Medical Clinic', pageWidth / 2, 20, { align: 'center' });
-
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text('Medical Report', pageWidth / 2, 28, { align: 'center' });
-
-        doc.setDrawColor(200);
-        doc.line(15, 35, pageWidth - 15, 35);
+        // Add Professional Branding Header with Logo
+        const startY = await addClinicHeader(doc, selectedClinic, 'Medical Report');
 
         // Patient Info
         doc.setFontSize(12);
         doc.setTextColor(0);
-        doc.text(`Patient Name: ${reportData.patient.name}`, 15, 45);
-        doc.text(`Patient ID: P-${reportData.patient.id}`, 15, 52);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 60, 45);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Patient Name: ${reportData.patient.name}`, 15, startY + 10);
+        doc.text(`Patient ID: P-${reportData.patient.id}`, 15, startY + 17);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 60, startY + 10);
 
         // Content
-        let yPos = 65;
+        let yPos = startY + 30;
 
         doc.setFontSize(14);
         doc.setTextColor(35, 40, 107);

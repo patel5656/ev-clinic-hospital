@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiUpload, FiSearch, FiFileText, FiClock, FiRefreshCw, FiEye, FiDownload } from 'react-icons/fi';
+import { FiUpload, FiSearch, FiFileText, FiClock, FiEye, FiDownload, FiChevronDown } from 'react-icons/fi';
 import { documentService } from '../../services/document.service';
 import { receptionService } from '../../services/reception.service';
 import Modal from '../../components/Modal';
@@ -42,17 +42,19 @@ const DocumentControllerDashboard = () => {
     const [records, setRecords] = useState<any[]>([]);
     const [stats, setStats] = useState<{ total: number; pending: number; completed: number } | null>(null);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+
     const [searchTerm, setSearchTerm] = useState('');
     const [viewRecord, setViewRecord] = useState<any>(null);
     const [uploadDocType, setUploadDocType] = useState('Previous History');
     const [uploadNotes, setUploadNotes] = useState('');
     const [uploadFiles, setUploadFiles] = useState<File[]>([]);
     const [patients, setPatients] = useState<any[]>([]);
+    const [patientSearch, setPatientSearch] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const fetchData = async () => {
         try {
-            setRefreshing(true);
+
             const [recRes, statsRes, patRes]: any[] = await Promise.all([
                 documentService.getRecords(),
                 documentService.getStats(),
@@ -66,13 +68,24 @@ const DocumentControllerDashboard = () => {
             console.error('Failed to fetch data:', error);
         } finally {
             setLoading(false);
-            setRefreshing(false);
+
         }
     };
 
     useEffect(() => {
         fetchData();
     }, []);
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (isDropdownOpen && !(event.target as HTMLElement).closest('.custom-dropdown-container')) {
+                setIsDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isDropdownOpen]);
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -112,10 +125,7 @@ const DocumentControllerDashboard = () => {
                     <h1>Document Controller Dashboard</h1>
                     <p>Manage and track clinical records and uploads.</p>
                 </div>
-                <button className="btn btn-secondary btn-sm btn-with-icon" onClick={fetchData} disabled={refreshing}>
-                    <FiRefreshCw className={refreshing ? 'spin' : ''} />
-                    <span>Refresh Data</span>
-                </button>
+
             </div>
 
             <div className="stats-grid mt-lg">
@@ -143,25 +153,107 @@ const DocumentControllerDashboard = () => {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '2rem', marginTop: '3rem' }}>
+            <div className="auto-grid mt-lg">
                 <div className="content-card">
                     <div className="card-header">
                         <h2><FiUpload /> Upload External Document</h2>
                     </div>
                     <form onSubmit={handleUpload} style={{ padding: '2rem' }}>
-                        <div className="form-group">
+                        <div className="form-group custom-dropdown-container" style={{ position: 'relative' }}>
                             <label>Patient *</label>
-                            <select
+                            <div
                                 className="form-control"
-                                value={patientId}
-                                onChange={(e) => setPatientId(e.target.value)}
-                                required
+                                style={{
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    background: loading ? '#f8fafc' : '#fff'
+                                }}
+                                onClick={() => !loading && setIsDropdownOpen(!isDropdownOpen)}
                             >
-                                <option value="">Select Patient</option>
-                                {patients.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name} (ID: {p.mrn || p.id})</option>
-                                ))}
-                            </select>
+                                <span style={{ color: !patientId ? '#94a3b8' : 'inherit' }}>
+                                    {loading
+                                        ? 'Loading...'
+                                        : (patients.find(p => String(p.id) === patientId)?.name || 'Select Patient')}
+                                </span>
+                                <span style={{ transition: 'transform 0.2s', transform: isDropdownOpen ? 'rotate(180deg)' : 'none', display: 'flex', alignItems: 'center' }}>
+                                    <FiChevronDown />
+                                </span>
+                            </div>
+
+                            {isDropdownOpen && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    right: 0,
+                                    zIndex: 1000,
+                                    background: '#fff',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '10px',
+                                    marginTop: '5px',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                    overflow: 'hidden'
+                                }}>
+                                    <div style={{ padding: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
+                                        <div className="input-with-icon-simple" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                            <FiSearch style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="Search patient..."
+                                                value={patientSearch}
+                                                onChange={(e) => setPatientSearch(e.target.value)}
+                                                autoFocus
+                                                style={{ paddingLeft: '2.5rem', marginBottom: 0, height: '38px' }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                                        {patients
+                                            .filter(p =>
+                                                (p.name || '').toLowerCase().includes(patientSearch.toLowerCase()) ||
+                                                (p.phone && p.phone.includes(patientSearch)) ||
+                                                String(p.id).includes(patientSearch)
+                                            )
+                                            .map(p => (
+                                                <div
+                                                    key={p.id}
+                                                    style={{
+                                                        padding: '0.75rem 1rem',
+                                                        cursor: 'pointer',
+                                                        transition: 'background 0.2s',
+                                                        fontSize: '0.9rem',
+                                                        borderBottom: '1px solid #f8fafc'
+                                                    }}
+                                                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                                                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                                    onClick={() => {
+                                                        setPatientId(String(p.id));
+                                                        setIsDropdownOpen(false);
+                                                        setPatientSearch('');
+                                                    }}
+                                                >
+                                                    <div style={{ fontWeight: 600 }}>{p.name}</div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                                        ID: {p.mrn || p.id} {p.phone ? `• ${p.phone}` : ''}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        {patients.filter(p =>
+                                            (p.name || '').toLowerCase().includes(patientSearch.toLowerCase()) ||
+                                            (p.phone && p.phone.includes(patientSearch)) ||
+                                            String(p.id).includes(patientSearch)
+                                        ).length === 0 && (
+                                                <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.875rem' }}>
+                                                    No patients found
+                                                </div>
+                                            )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div className="form-group">
                             <label>Document Type</label>
@@ -304,20 +396,11 @@ const DocumentControllerDashboard = () => {
                             <div style={{ marginTop: '1rem' }}>
                                 <button
                                     onClick={() => { downloadRecord(viewRecord); }}
-                                    style={{
-                                        background: '#0f172a',
-                                        color: 'white',
-                                        border: 'none',
-                                        padding: '8px 16px',
-                                        borderRadius: '6px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        cursor: 'default',
-                                        pointerEvents: 'auto'
-                                    }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#0f172a'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.background = '#0f172a'; }}
+
+
+
+
+
                                 >
                                     <FiDownload /> Download
                                 </button>

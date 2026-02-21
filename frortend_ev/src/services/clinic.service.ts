@@ -9,6 +9,10 @@ export const clinicService = {
         return api.get('/clinic/details');
     },
 
+    updateClinicDetails: async (data: any) => {
+        return api.patch('/clinic/details', data);
+    },
+
     getStaff: async () => {
         return api.get('/clinic/staff');
     },

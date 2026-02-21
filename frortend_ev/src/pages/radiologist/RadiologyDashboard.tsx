@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FiActivity, FiCheckCircle, FiClock, FiRefreshCw } from 'react-icons/fi';
+import { FiActivity, FiCheckCircle, FiClock } from 'react-icons/fi';
 import { labService } from '../../services/lab.service';
 import { useToast } from '../../context/ToastContext';
 import '../SharedDashboard.css';
@@ -10,7 +10,7 @@ const RadiologyDashboard = () => {
     const [stats, setStats] = useState({ pending: 0, completedToday: 0 });
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+
 
     const pendingRef = useRef<HTMLDivElement>(null);
     const completedRef = useRef<HTMLDivElement>(null);
@@ -25,7 +25,7 @@ const RadiologyDashboard = () => {
 
     const fetchOrders = async () => {
         try {
-            setRefreshing(true);
+
             const response: any = await labService.getOrders('RADIOLOGY');
             let data = [];
             if (response?.status === 'success' && Array.isArray(response.data)) data = response.data;
@@ -41,7 +41,7 @@ const RadiologyDashboard = () => {
             toast.error('Failed to load requests');
         } finally {
             setLoading(false);
-            setRefreshing(false);
+
         }
     };
 
@@ -54,10 +54,7 @@ const RadiologyDashboard = () => {
                     <h1>Radiologist Dashboard</h1>
                     <p>Report and manage imaging results.</p>
                 </div>
-                <button className="btn btn-secondary btn-sm btn-with-icon" onClick={fetchOrders} disabled={refreshing}>
-                    <FiRefreshCw className={refreshing ? 'spin' : ''} />
-                    <span>{refreshing ? 'Refreshing...' : 'Refresh Data'}</span>
-                </button>
+
             </div>
 
             <div className="stats-grid mt-lg">

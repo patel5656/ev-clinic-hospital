@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiActivity, FiUpload, FiCheckCircle, FiRefreshCw } from 'react-icons/fi';
+import { FiActivity, FiUpload, FiCheckCircle } from 'react-icons/fi';
 import { labService } from '../../services/lab.service';
 import { useToast } from '../../context/ToastContext';
 import Modal from '../../components/Modal';
@@ -10,7 +10,7 @@ const LabRequests = () => {
     const toast = useToast();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [resultText, setResultText] = useState('');
@@ -19,7 +19,7 @@ const LabRequests = () => {
 
     const fetchOrders = async () => {
         try {
-            setRefreshing(true);
+
             const response: any = await labService.getOrders('LAB', 'Pending');
             let data = [];
             if (response?.status === 'success' && Array.isArray(response.data)) data = response.data;
@@ -31,7 +31,7 @@ const LabRequests = () => {
             toast.error('Failed to load lab requests');
         } finally {
             setLoading(false);
-            setRefreshing(false);
+
         }
     };
 
@@ -86,10 +86,7 @@ const LabRequests = () => {
                     <h1>Lab Test Requests</h1>
                     <p>View and manage pending lab requests.</p>
                 </div>
-                <button className="btn btn-secondary btn-sm btn-with-icon" onClick={fetchOrders} disabled={refreshing}>
-                    <FiRefreshCw className={refreshing ? 'spin' : ''} />
-                    <span>{refreshing ? 'Refreshing...' : 'Refresh Data'}</span>
-                </button>
+
             </div>
 
             <div className="content-section mt-xl">

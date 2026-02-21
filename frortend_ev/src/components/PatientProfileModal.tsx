@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FiUser, FiActivity, FiFileText, FiClock, FiX, FiMail, FiPhone, FiCalendar, FiUpload, FiDownload, FiFile, FiShoppingBag, FiCreditCard, FiCheckCircle } from 'react-icons/fi';
 import { useApp } from '../context/AppContext';
 import { doctorService } from '../services/doctor.service';
+import { clinicService } from '../services/clinic.service';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { addClinicHeader } from '../utils/pdfUtils';
 import './PatientProfileModal.css';
 
 interface PatientProfileModalProps {
@@ -19,6 +23,28 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({ isOpen, onClo
     const [activeTab, setActiveTab] = useState('history'); // history, template-ID, results, info, documents
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadData, setUploadData] = useState({ type: 'PASSPORT', name: '', url: '' });
+    const [dynamicDocTypes, setDynamicDocTypes] = useState<string[]>([]);
+
+    useEffect(() => {
+        const fetchClinicDetails = async () => {
+            try {
+                const res = await clinicService.getClinicDetails();
+                const clinicData = res.data?.data || res.data;
+                if (clinicData?.documentTypes && clinicData.documentTypes.length > 0) {
+                    setDynamicDocTypes(clinicData.documentTypes);
+                    setUploadData(prev => ({ ...prev, type: clinicData.documentTypes[0] }));
+                } else {
+                    setDynamicDocTypes(['PASSPORT', 'ID_CARD', 'REPORT', 'OTHER']);
+                }
+            } catch (err) {
+                console.error('Failed to fetch clinic details for doc types:', err);
+                setDynamicDocTypes(['PASSPORT', 'ID_CARD', 'REPORT', 'OTHER']);
+            }
+        };
+        if (isOpen) {
+            fetchClinicDetails();
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen && patientId) {
@@ -38,6 +64,84 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({ isOpen, onClo
     }, [isOpen, patientId]);
 
     if (!isOpen) return null;
+
+    const generateInvoicePDF = async (invoice: any) => {
+        try {
+            const doc = new jsPDF();
+
+            // Fetch clinic details for header
+            const clinicRes = await clinicService.getClinicDetails();
+            const clinic = clinicRes.data || {};
+
+            // Add Header
+            await addClinicHeader(doc, clinic, 'Invoice');
+
+            // Set content start Y
+            let yPos = 55;
+
+            // Invoice Details Box
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Invoice Details:', 15, yPos);
+            yPos += 7;
+
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Invoice Number: INV-${invoice.id}`, 15, yPos);
+            // Handle date field (could be date or createdAt based on schema/usage)
+            const invDate = invoice.date || invoice.createdAt;
+            doc.text(`Date: ${new Date(invDate).toLocaleDateString()}`, 120, yPos);
+            yPos += 6;
+
+            doc.text(`Patient: ${displayName}`, 15, yPos);
+            doc.text(`Status: ${invoice.status}`, 120, yPos);
+            yPos += 10;
+
+            // Determine Amount (Handle schema mismatch if needed)
+            // Backend schema: amount. Frontend might expect totalAmount.
+            const totalAmount = Number(invoice.amount || invoice.totalAmount || 0);
+
+            // Table
+            autoTable(doc, {
+                startY: yPos,
+                head: [['Service/Description', 'Amount (AED)']],
+                body: [
+                    [
+                        invoice.service || 'Medical Service',
+                        totalAmount.toFixed(2)
+                    ]
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: [45, 59, 174] }, // Primary color
+                styles: { fontSize: 10, cellPadding: 3 },
+            });
+
+            // Get final Y
+            const finalY = (doc as any).lastAutoTable.finalY || yPos + 30;
+
+            // Totals
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Total Amount: AED ${totalAmount.toFixed(2)}`, 140, finalY + 10, { align: 'right' });
+
+            // Derived Paid/Due based on Status
+            const isPaid = invoice.status === 'Paid';
+            const paidAmt = isPaid ? totalAmount : (Number(invoice.paidAmount) || 0);
+            const dueAmt = totalAmount - paidAmt;
+
+            doc.text(`Paid Amount: AED ${paidAmt.toFixed(2)}`, 140, finalY + 16, { align: 'right' });
+            doc.text(`Balance Due: AED ${dueAmt.toFixed(2)}`, 140, finalY + 22, { align: 'right' });
+
+            // Footer
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(8);
+            doc.text('Thank you for your business.', 15, finalY + 35);
+
+            doc.save(`Invoice-${invoice.id}.pdf`);
+
+        } catch (error) {
+            console.error('Failed to generate invoice PDF:', error);
+            alert('Failed to generate invoice PDF');
+        }
+    };
 
     // Filter templates to show as tabs - only those that have at least one record for this patient
     // OR show all clinic themes? User said "based on the custom forms created by the clinic".
@@ -418,15 +522,15 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({ isOpen, onClo
                                             <div className="billing-stats-row">
                                                 <div className="stat-card-mini">
                                                     <label>Total Invoiced</label>
-                                                    <div className="value">AED {profile.invoices.reduce((sum: number, inv: any) => sum + (inv.totalAmount || 0), 0).toFixed(2)}</div>
+                                                    <div className="value">AED {profile.invoices.reduce((sum: number, inv: any) => sum + Number(inv.amount || 0), 0).toFixed(2)}</div>
                                                 </div>
                                                 <div className="stat-card-mini">
                                                     <label>Total Paid</label>
-                                                    <div className="value paid">AED {profile.invoices.reduce((sum: number, inv: any) => sum + (inv.paidAmount || 0), 0).toFixed(2)}</div>
+                                                    <div className="value paid">AED {profile.invoices.reduce((sum: number, inv: any) => sum + (inv.status === 'Paid' ? Number(inv.amount || 0) : 0), 0).toFixed(2)}</div>
                                                 </div>
                                                 <div className="stat-card-mini">
                                                     <label>Outstanding</label>
-                                                    <div className="value pending">AED {profile.invoices.reduce((sum: number, inv: any) => sum + ((inv.totalAmount || 0) - (inv.paidAmount || 0)), 0).toFixed(2)}</div>
+                                                    <div className="value pending">AED {profile.invoices.reduce((sum: number, inv: any) => sum + (inv.status !== 'Paid' ? Number(inv.amount || 0) : 0), 0).toFixed(2)}</div>
                                                 </div>
                                             </div>
 
@@ -451,10 +555,14 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({ isOpen, onClo
                                                                     {inv.status}
                                                                 </span>
                                                             </td>
-                                                            <td>AED {inv.totalAmount?.toFixed(2)}</td>
-                                                            <td>AED {inv.paidAmount?.toFixed(2)}</td>
+                                                            <td>AED {Number(inv.amount || 0).toFixed(2)}</td>
+                                                            <td>AED {inv.status === 'Paid' ? Number(inv.amount || 0).toFixed(2) : '0.00'}</td>
                                                             <td>
-                                                                <button className="btn-icon">
+                                                                <button
+                                                                    className="btn-icon"
+                                                                    onClick={() => generateInvoicePDF(inv)}
+                                                                    title="Download PDF"
+                                                                >
                                                                     <FiDownload />
                                                                 </button>
                                                             </td>
@@ -679,10 +787,11 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({ isOpen, onClo
                                     onChange={(e) => setUploadData({ ...uploadData, type: e.target.value })}
                                     className="form-control"
                                 >
-                                    <option value="PASSPORT">Passport</option>
-                                    <option value="ID_CARD">ID Card</option>
-                                    <option value="REPORT">Report</option>
-                                    <option value="OTHER">Other</option>
+                                    {dynamicDocTypes.map(type => (
+                                        <option key={type} value={type}>
+                                            {type.replace(/_/g, ' ').charAt(0).toUpperCase() + type.replace(/_/g, ' ').slice(1).toLowerCase()}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="form-group">
@@ -717,7 +826,18 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({ isOpen, onClo
                                 Cancel
                             </button>
                             <button
-                                className="btn-primary"
+                                style={{
+                                    padding: '0.5rem 1.25rem',
+                                    background: '#f1f5f9',
+                                    color: '#334155',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '6px',
+                                    fontSize: '0.95rem',
+                                    cursor: 'pointer',
+                                    outline: 'none',
+                                }}
+                                onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
+                                onMouseOut={e => (e.currentTarget.style.background = '#f1f5f9')}
                                 onClick={async () => {
                                     try {
                                         await doctorService.uploadPatientDocument(patientId, uploadData);

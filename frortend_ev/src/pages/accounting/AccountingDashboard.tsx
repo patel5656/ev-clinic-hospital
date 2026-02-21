@@ -58,13 +58,7 @@ const AccountingDashboard = () => {
                     <h1>Accounting Overview</h1>
                     <p>Financial summaries and transaction monitoring for {selectedClinic?.name || 'Clinic'}.</p>
                 </div>
-                <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={fetchStats}
-                    disabled={loading}
-                >
-                    {loading ? 'Loading...' : 'Refresh Data'}
-                </button>
+
             </div>
 
             {loading && !stats ? (
@@ -126,7 +120,7 @@ const AccountingDashboard = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', marginTop: '3rem' }}>
+                    <div className="split-layout-grid">
                         <div className="content-card">
                             <div className="card-header">
                                 <h2>Recent Financial Activity</h2>
@@ -145,7 +139,15 @@ const AccountingDashboard = () => {
                                         {recentInvoices.map((inv: any) => (
                                             <tr key={inv.id}>
                                                 <td>{inv.id}</td>
-                                                <td>{inv.patient?.name ?? 'Unknown'}</td>
+                                                <td>
+                                                    <span
+                                                        className="clickable-link"
+                                                        onClick={() => navigate(`/accounting/billing?focusedPatientId=${inv.patientId}`)}
+                                                        style={{ color: 'var(--primary-color)', fontWeight: '600', cursor: 'pointer', textDecoration: 'underline' }}
+                                                    >
+                                                        {inv.patient?.name ?? 'Unknown'}
+                                                    </span>
+                                                </td>
                                                 <td>AED {inv.amount}</td>
                                                 <td>
                                                     <span className={`status-pill ${(inv.status || '').toLowerCase()}`}>

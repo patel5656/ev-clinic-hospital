@@ -116,7 +116,7 @@ const PatientDashboard = () => {
                 </div>
             </div>
 
-            <div className="dashboard-sections mt-lg" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
+            <div className="dashboard-sections mt-lg">
                 <div className="content-card" id="medical-timeline">
                     <div className="card-header">
                         <h2>Your Medical Timeline</h2>
@@ -197,7 +197,7 @@ const PatientDashboard = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+                <div className="auto-grid mt-lg">
                     <div className="content-card">
                         <div className="card-header">
                             <h2>Invoices & Billing</h2>

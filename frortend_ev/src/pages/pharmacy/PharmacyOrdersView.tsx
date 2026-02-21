@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiPackage, FiCheck, FiInfo, FiClock, FiCheckCircle, FiRefreshCw, FiAlertTriangle, FiGrid } from 'react-icons/fi';
+import { FiPackage, FiCheck, FiInfo, FiClock, FiCheckCircle, FiAlertTriangle, FiGrid } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { useToast } from '../../context/ToastContext';
@@ -18,15 +18,14 @@ const PharmacyOrdersView = ({ title, subtitle }: PharmacyOrdersViewProps) => {
     const [stats, setStats] = useState({ prescriptionsToday: 0, dispensedToday: 0, lowStock: 0, totalItems: 0 });
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
     const [amount, setAmount] = useState<string>('');
     const [isPaid, setIsPaid] = useState(false);
 
-    const fetchOrders = async (isBackground = false) => {
+    const fetchOrders = async () => {
         try {
-            if (!isBackground) setRefreshing(true);
             const [ordersRes, invRes] = await Promise.all([
                 pharmacyService.getOrders(),
                 pharmacyService.getInventory().catch(() => ({ data: [] }))
@@ -46,13 +45,12 @@ const PharmacyOrdersView = ({ title, subtitle }: PharmacyOrdersViewProps) => {
             console.error('Failed to fetch pharmacy orders', error);
         } finally {
             setLoading(false);
-            if (!isBackground) setRefreshing(false);
         }
     };
 
     useEffect(() => {
         fetchOrders();
-        const interval = setInterval(() => fetchOrders(true), 10000);
+        const interval = setInterval(() => fetchOrders(), 10000);
         return () => clearInterval(interval);
     }, []);
 
@@ -95,10 +93,7 @@ const PharmacyOrdersView = ({ title, subtitle }: PharmacyOrdersViewProps) => {
                     <h1>{title}</h1>
                     <p>{subtitle}</p>
                 </div>
-                <button className="btn btn-secondary btn-sm" onClick={() => fetchOrders(false)} disabled={refreshing}>
-                    <FiRefreshCw className={refreshing ? 'spin' : ''} />
-                    <span>{refreshing ? 'Refreshing...' : 'Refresh Data'}</span>
-                </button>
+
             </div>
 
             <div className="stats-grid mt-lg">

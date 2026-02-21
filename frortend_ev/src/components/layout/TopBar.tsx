@@ -50,7 +50,13 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
                 // If open, fetch actual list
                 if (isNotificationsOpen) {
                     const listRes: any = await departmentService.getNotifications();
-                    setNotificationsList(listRes?.data ?? listRes ?? []);
+                    const fullList = listRes?.data ?? listRes ?? [];
+
+                    // Filter to show only today's notifications
+                    const today = new Date().toDateString();
+                    const todaysList = fullList.filter((n: any) => new Date(n.createdAt).toDateString() === today);
+
+                    setNotificationsList(todaysList);
                 }
             } catch (e) {
                 console.error('Failed to fetch notifications', e);
@@ -74,6 +80,17 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    const formatNotificationMessage = (msg: any) => {
+        if (typeof msg !== 'string') return msg;
+        try {
+            const parsed = JSON.parse(msg);
+            if (typeof parsed !== 'object' || parsed === null) return msg;
+            return parsed.message || parsed.description || parsed.content || (parsed.type ? `${parsed.type} Notification` : msg);
+        } catch {
+            return msg;
+        }
+    };
 
     return (
         <header className={`topbar ${isPatientView ? 'patient-nav' : ''}`}>
@@ -146,13 +163,12 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
                 <div className="notification-wrapper" ref={notificationRef}>
                     <button className="notification-btn" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}>
                         <FiBell />
-                        {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
+                        {notificationCount > 0 && <span className="notification-dot"></span>}
                     </button>
                     {isNotificationsOpen && (
                         <div className="notifications-dropdown">
                             <div className="dropdown-header">
                                 <h3>Notifications</h3>
-                                {notificationCount > 0 && <span className="unread-dot">{notificationCount} unread</span>}
                             </div>
                             <div className="notifications-list">
                                 {notificationsList.length > 0 ? (
@@ -160,7 +176,7 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
                                         <div key={n.id} className={`notification-item ${n.status === 'unread' ? 'unread' : ''}`}>
                                             <div className="notif-icon"><FiClock /></div>
                                             <div className="notif-content">
-                                                <p>{n.message}</p>
+                                                <p>{formatNotificationMessage(n.message)}</p>
                                                 <span>{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
                                         </div>

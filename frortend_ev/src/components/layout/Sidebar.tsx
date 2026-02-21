@@ -119,6 +119,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                             { name: 'Bookings', path: '/reception/bookings', icon: <FiGrid /> },
                             { name: 'Patients', path: '/reception/patients', icon: <FiUsers /> },
                             { name: 'Billing', path: '/reception/billing', icon: <FiDollarSign /> },
+                            { name: 'Token Queue', path: '/reception/token-queue', icon: <FiList /> },
                         ]
                     });
                     break;
@@ -154,6 +155,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                             { name: 'Requests', path: '/lab/requests', icon: <FiFileText /> },
                             { name: 'Collection', path: '/lab/sample-collection', icon: <FiPackage /> },
                             { name: 'Results', path: '/lab/enter-results', icon: <FiEdit2 /> },
+                            { name: 'Reports', path: '/lab/reports', icon: <FiPieChart /> },
                         ]
                     });
                     break;
@@ -165,6 +167,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                             { name: 'Dashboard', path: '/radiology', icon: <FiHome /> },
                             { name: 'Requests', path: '/radiology/requests', icon: <FiFileText /> },
                             { name: 'Uploads', path: '/radiology/upload-images', icon: <FiUpload /> },
+                            { name: 'Reports', path: '/radiology/reports', icon: <FiPieChart /> },
                         ]
                     });
                     break;
@@ -183,6 +186,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                         title: 'PATIENT PORTAL',
                         items: [
                             { name: 'Dashboard', path: '/patient', icon: <FiHome /> },
+                            { name: 'Reports & Records', path: '/patient/reports', icon: <FiFileText /> },
                             { name: 'Book Appointment', path: '/patient/book', icon: <FiCalendar /> },
                             { name: 'My Appointments', path: '/patient/status', icon: <FiList /> },
                             { name: 'Settings', path: '/patient/settings', icon: <FiSettings /> },

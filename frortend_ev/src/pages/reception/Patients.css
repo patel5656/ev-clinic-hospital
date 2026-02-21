@@ -297,6 +297,51 @@
 }
 
 @media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 1.5rem;
+    }
+
+    .action-btns-header {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .action-btns-header .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .filter-bar-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-filters {
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .search-input-wrapper {
+        width: 100%;
+    }
+
+    .filter-select {
+        width: 100%;
+    }
+
+    .quick-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .stat-pill {
+        flex: 1;
+        justify-content: center;
+    }
+
     .patient-cards-grid {
         grid-template-columns: 1fr;
     }

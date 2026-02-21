@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
@@ -34,6 +34,8 @@ const Clinics = () => {
     });
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
     const filteredClinics = (clinics as any[]).filter(clinic =>
@@ -41,15 +43,47 @@ const Clinics = () => {
         clinic.location.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+    const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            setLogoFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setLogoPreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        // Show local preview immediately
+        const localPreview = URL.createObjectURL(file);
+        setLogoPreview(localPreview);
+        setLogoFile(file);
+        setIsUploading(true);
+
+        try {
+            const cloudName = "dw48hcxi5";
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'ml_default');
+            formData.append('api_key', '689363246125766');
+
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+                { method: 'POST', body: formData }
+            );
+
+            if (!response.ok) {
+                // If preset not found, just keep local file - backend will handle upload
+                console.warn('Cloudinary direct upload failed, using local file.');
+                setIsUploading(false);
+                return;
+            }
+
+            const data = await response.json();
+            const imageUrl = data.secure_url || data.url;
+            if (imageUrl) {
+                setLogoUrl(imageUrl);
+                setLogoPreview(imageUrl);
+                setLogoFile(null);
+            }
+        } catch (err) {
+            console.warn('Upload error, using local file:', err);
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -63,6 +97,9 @@ const Clinics = () => {
             });
             if (logoFile) {
                 formData.append('logo', logoFile);
+            } else if (logoUrl) {
+                // If we have a Cloudinary URL, send it as text in the 'logo' field
+                formData.append('logo', logoUrl);
             }
 
             if (isEditMode && selectedClinic) {
@@ -77,6 +114,7 @@ const Clinics = () => {
                 setIsEditMode(false);
                 setSelectedClinic(null);
                 setLogoFile(null);
+                setLogoUrl(null);
                 setLogoPreview(null);
                 setClinicForm({
                     name: '',
@@ -115,8 +153,9 @@ const Clinics = () => {
             numberOfUsers: clinic.userLimit || 5
         });
         setLogoFile(null);
+        setLogoUrl(null);
         if (clinic.logo) {
-            setLogoPreview(clinic.logo.startsWith('http') ? clinic.logo : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${clinic.logo}`);
+            setLogoPreview(getLogoUrl(clinic.logo));
         } else {
             setLogoPreview(null);
         }
@@ -168,12 +207,36 @@ const Clinics = () => {
         await loginAsClinic(clinic);
     };
 
-    // const { superService } = useApp() as any; // Ensure this is available or import it.
-    // Commenting out unused states to fix build
-    // const [clinicInsights, setClinicInsights] = useState<any>(null);
-    // const [isInsightsOpen, setIsInsightsOpen] = useState(false);
-    // const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-    // const [resetData, setResetData] = useState({ userId: 0, newPassword: '' });
+    const getLogoUrl = (logoPath: string | null) => {
+        if (!logoPath || typeof logoPath !== 'string') return null;
+        if (logoPath.startsWith('http')) return logoPath;
+
+        // Try to construct backend URL from VITE_API_URL
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        let backendBase = apiUrl;
+
+        if (apiUrl.includes('/api')) {
+            backendBase = apiUrl.split('/api')[0];
+        }
+
+        // Clean up double slashes
+        const cleanPath = logoPath.startsWith('/') ? logoPath : `/${logoPath}`;
+        const finalUrl = `${backendBase}${cleanPath}`;
+
+        return finalUrl;
+    };
+
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        e.currentTarget.style.display = 'none';
+        const parent = e.currentTarget.parentElement;
+        if (parent && !parent.querySelector('.fallback-icon')) {
+            const fallback = document.createElement('div');
+            fallback.className = 'fallback-icon';
+            fallback.innerHTML = '🏢';
+            fallback.style.fontSize = '2rem';
+            parent.appendChild(fallback);
+        }
+    };
 
     /*
     const handleShowInsights = async (clinic: any) => {
@@ -207,6 +270,9 @@ const Clinics = () => {
             gstPercent: 0,
             numberOfUsers: 5
         });
+        setLogoFile(null);
+        setLogoUrl(null);
+        setLogoPreview(null);
         setIsModalOpen(true);
     };
 
@@ -253,6 +319,20 @@ const Clinics = () => {
                             <tr key={clinic.id}>
                                 <td>
                                     <div className="clinic-cell">
+                                        <div className="clinic-avatar-sm" onClick={() => handleViewDetails(clinic)} style={{ cursor: 'pointer' }}>
+                                            {clinic.logo ? (
+                                                <img
+                                                    src={getLogoUrl(clinic.logo) || ''}
+                                                    alt=""
+                                                    onError={handleImageError}
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                                />
+                                            ) : (
+                                                <div className="clinic-avatar">
+                                                    {clinic.name?.charAt(0) || 'C'}
+                                                </div>
+                                            )}
+                                        </div>
                                         <span className="clickable" onClick={() => handleViewDetails(clinic)}>
                                             {clinic.name || 'Unnamed Facility'}
                                         </span>
@@ -331,9 +411,9 @@ const Clinics = () => {
                         )}
                         <div className="clinic-form-group">
                             <label className="clinic-modal-label">Company/Clinic Logo Upload</label>
-                            <div className="logo-upload-container" style={{
+                            <label htmlFor="logo-file-input" style={{
                                 border: '2px dashed #E2E8F0',
-                                padding: '1.5rem',
+                                padding: logoPreview ? '0' : '1.5rem',
                                 borderRadius: '12px',
                                 textAlign: 'center',
                                 background: '#F8FAFC',
@@ -343,30 +423,38 @@ const Clinics = () => {
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
-                                gap: '1rem'
-                            }} onClick={() => document.getElementById('logo-upload')?.click()}>
-                                {logoPreview ? (
-                                    <div style={{ position: 'relative', width: '100px', height: '100px' }}>
-                                        <img src={logoPreview} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }} />
-                                        <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.5rem' }}>Click to change logo</div>
+                                justifyContent: 'center',
+                                gap: '1rem',
+                                overflow: 'hidden',
+                                minHeight: '200px'
+                            }}>
+                                <input
+                                    id="logo-file-input"
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                                    style={{ display: 'none' }}
+                                    onChange={handleLogoFileChange}
+                                />
+                                {isUploading ? (
+                                    <div style={{ fontSize: '0.875rem', color: '#64748B' }}>
+                                        <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>⏳</div>
+                                        <strong>Uploading to Cloudinary...</strong>
+                                    </div>
+                                ) : logoPreview ? (
+                                    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#e2e8f0' }}>
+                                        <img src={logoPreview} alt="Logo Preview" style={{ maxWidth: '100%', maxHeight: '250px', objectFit: 'contain' }} />
+                                        <div style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '0.75rem', padding: '6px' }}>Click to change logo</div>
                                     </div>
                                 ) : (
                                     <>
-                                        <div style={{ fontSize: '2rem', color: '#94A3B8' }}>+</div>
+                                        <div style={{ fontSize: '2rem', color: '#94A3B8' }}>📁</div>
                                         <div style={{ fontSize: '0.875rem', color: '#64748B' }}>
-                                            <strong>Browse File</strong> to upload clinic logo
-                                            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>PNG, JPG or JPEG (Max 5MB)</p>
+                                            <strong>Click here to select Logo</strong>
+                                            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>PNG, JPG, WEBP supported (max 5MB)</p>
                                         </div>
                                     </>
                                 )}
-                                <input
-                                    id="logo-upload"
-                                    type="file"
-                                    accept=".png,.jpg,.jpeg"
-                                    onChange={handleFileChange}
-                                    style={{ display: 'none' }}
-                                />
-                            </div>
+                            </label>
                         </div>
 
                         <div className="clinic-form-group">
@@ -524,14 +612,29 @@ const Clinics = () => {
             <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Facility Details">
                 {selectedClinic && (
                     <div className="clinic-details">
-                        <div className="details-header" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                            {selectedClinic.logo && (
-                                <img
-                                    src={selectedClinic.logo.startsWith('http') ? selectedClinic.logo : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${selectedClinic.logo}`}
-                                    alt="Clinic Logo"
-                                    style={{ width: '80px', height: '80px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #E2E8F0' }}
-                                />
-                            )}
+                        <div className="details-header" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
+                            <div className="details-logo-container" style={{
+                                width: '100px',
+                                height: '100px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: '#F8FAFC',
+                                borderRadius: '12px',
+                                border: '1px solid #E2E8F0',
+                                overflow: 'hidden'
+                            }}>
+                                {selectedClinic.logo ? (
+                                    <img
+                                        src={getLogoUrl(selectedClinic.logo) || ''}
+                                        alt="Clinic Logo"
+                                        onError={handleImageError}
+                                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                    />
+                                ) : (
+                                    <div style={{ fontSize: '2.5rem' }}>🏢</div>
+                                )}
+                            </div>
                             <div>
                                 <h2>{selectedClinic.name}</h2>
                                 <p style={{ color: '#64748B', fontSize: '0.9rem' }}>{selectedClinic.location}</p>

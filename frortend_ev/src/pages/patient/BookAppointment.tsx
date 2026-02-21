@@ -229,7 +229,7 @@ const BookAppointment = () => {
                                     <FiPhone className="patient-booking-label-icon" />
                                     Phone Number <span className="patient-booking-required">*</span>
                                 </label>
-                                <div className="patient-booking-input-wrapper" style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '0.5rem' }}>
+                                <div className="patient-booking-input-wrapper phone-grid-responsive">
                                     <input
                                         type="text"
                                         placeholder="+971"

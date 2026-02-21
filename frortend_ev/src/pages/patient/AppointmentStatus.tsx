@@ -74,7 +74,7 @@ const AppointmentStatus = () => {
                                 </div>
                             </div>
 
-                            <div className="booking-status-body grid grid-3">
+                            <div className="booking-status-body auto-grid">
                                 <div className="info-item">
                                     <FiActivity className="icon" />
                                     <div>

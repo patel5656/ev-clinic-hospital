@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { FiSave, FiClock, FiCalendar, FiBell, FiSettings as FiSettingsIcon } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiSave, FiClock, FiCalendar, FiBell, FiSettings as FiSettingsIcon, FiFileText, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
+import { clinicService } from '../../services/clinic.service';
 import './ClinicSettings.css';
 
 const ClinicSettings = () => {
@@ -37,12 +38,70 @@ const ClinicSettings = () => {
         // Booking Rules
         advanceBookingDays: 30,
         cancellationHours: 24,
-        slotDuration: 30
+        slotDuration: 30,
+
+        // Document Types
+        documentTypes: currentClinic?.documentTypes || []
     });
 
-    const handleSave = () => {
-        console.log('Saving settings:', settings);
-        alert('Settings saved successfully!');
+    const [newDocType, setNewDocType] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchDetails = async () => {
+            try {
+                const res = await clinicService.getClinicDetails();
+                const clinicData = res.data?.data || res.data;
+                if (clinicData) {
+                    setSettings(prev => ({
+                        ...prev,
+                        documentTypes: clinicData.documentTypes || []
+                    }));
+                }
+            } catch (err) {
+                console.error('Failed to fetch clinic details:', err);
+            }
+        };
+        fetchDetails();
+    }, []);
+
+    const handleSave = async () => {
+        setLoading(true);
+        try {
+            await clinicService.updateClinicDetails({
+                name: settings.clinicName,
+                location: settings.address,
+                contact: settings.phone,
+                email: settings.email,
+                documentTypes: settings.documentTypes
+            });
+            alert('Settings saved successfully!');
+        } catch (err: any) {
+            console.error('Failed to save settings:', err);
+            alert(err?.response?.data?.message || 'Failed to save settings');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const addDocType = () => {
+        if (!newDocType.trim()) return;
+        if (settings.documentTypes.includes(newDocType.trim())) {
+            alert('This document type already exists');
+            return;
+        }
+        setSettings({
+            ...settings,
+            documentTypes: [...settings.documentTypes, newDocType.trim()]
+        });
+        setNewDocType('');
+    };
+
+    const removeDocType = (type: string) => {
+        setSettings({
+            ...settings,
+            documentTypes: settings.documentTypes.filter((t: string) => t !== type)
+        });
     };
 
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -54,9 +113,13 @@ const ClinicSettings = () => {
                     <h1>Clinic Settings</h1>
                     <p>Configure your clinic profile, working hours, and preferences</p>
                 </div>
-                <button className="btn btn-primary btn-with-icon btn-no-hover" onClick={handleSave}>
+                <button
+                    className="btn btn-primary btn-with-icon btn-no-hover"
+                    onClick={handleSave}
+                    disabled={loading}
+                >
                     <FiSave />
-                    <span>Save Changes</span>
+                    <span>{loading ? 'Saving...' : 'Save Changes'}</span>
                 </button>
             </div>
 
@@ -263,6 +326,66 @@ const ClinicSettings = () => {
                                 <option value="45">45 minutes</option>
                                 <option value="60">60 minutes</option>
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Document Types */}
+                <div className="settings-card card full-width">
+                    <div className="settings-header">
+                        <FiFileText />
+                        <h3>Document Management</h3>
+                    </div>
+                    <div className="settings-form">
+                        <div className="form-group">
+                            <label>Configure Patient/Staff Document Types</label>
+                            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem' }}>
+                                Add or remove document types that will be available in the upload dropdowns.
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Vaccination Record, Lab Report"
+                                    value={newDocType}
+                                    onChange={(e) => setNewDocType(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && addDocType()}
+                                />
+                                <button className="btn btn-primary" onClick={addDocType}>
+                                    <FiPlus /> Add
+                                </button>
+                            </div>
+
+                            <div className="doc-types-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                                {settings.documentTypes.length > 0 ? (
+                                    settings.documentTypes.map((type: string) => (
+                                        <div
+                                            key={type}
+                                            style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                padding: '0.75rem',
+                                                background: '#f8fafc',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '6px'
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{type}</span>
+                                            <button
+                                                onClick={() => removeDocType(type)}
+                                                style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer', display: 'flex' }}
+                                            >
+                                                <FiTrash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+                                        No custom document types added yet. Default types will be used.
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

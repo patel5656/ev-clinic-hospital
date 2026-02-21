@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiUpload, FiFileText, FiUser, FiUsers } from 'react-icons/fi';
+import { FiUpload, FiFileText, FiUser, FiUsers, FiSearch, FiChevronDown } from 'react-icons/fi';
 import { documentService } from '../../services/document.service';
 import { receptionService } from '../../services/reception.service';
 import { clinicService } from '../../services/clinic.service';
 import '../SharedDashboard.css';
 
-const DOC_TYPES = [
+const DEFAULT_DOC_TYPES = [
     'Outside Lab Report',
     'Outside Radiology Report',
     'Sick Leave',
@@ -32,6 +32,23 @@ const UploadDocuments = () => {
     const [staffList, setStaffList] = useState<{ id: number; name: string }[]>([]);
     const [loadingPatients, setLoadingPatients] = useState(true);
     const [loadingStaff, setLoadingStaff] = useState(true);
+    const [docTypes, setDocTypes] = useState<string[]>(DEFAULT_DOC_TYPES);
+
+    // Search & Dropdown State
+    const [patientSearch, setPatientSearch] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    useEffect(() => {
+        clinicService.getClinicDetails()
+            .then((res: any) => {
+                const clinicData = res.data?.data || res.data;
+                if (clinicData?.documentTypes && clinicData.documentTypes.length > 0) {
+                    setDocTypes(clinicData.documentTypes);
+                    setDocType(clinicData.documentTypes[0]);
+                }
+            })
+            .catch(err => console.error('Failed to fetch dynamic doc types:', err));
+    }, []);
 
     useEffect(() => {
         receptionService.getPatients()
@@ -56,6 +73,17 @@ const UploadDocuments = () => {
             .catch(() => setStaffList([]))
             .finally(() => setLoadingStaff(false));
     }, []);
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (isDropdownOpen && !(event.target as HTMLElement).closest('.custom-dropdown-container')) {
+                setIsDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isDropdownOpen]);
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -146,20 +174,97 @@ const UploadDocuments = () => {
                     </div>
 
                     {uploadFor === 'patient' && (
-                        <div className="form-group">
+                        <div className="form-group custom-dropdown-container" style={{ position: 'relative' }}>
                             <label>Patient *</label>
-                            <select
+                            <div
                                 className="form-control"
-                                value={patientId}
-                                onChange={(e) => setPatientId(e.target.value)}
-                                required={uploadFor === 'patient'}
-                                disabled={loadingPatients}
+                                style={{
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    background: loadingPatients ? '#f8fafc' : '#fff'
+                                }}
+                                onClick={() => !loadingPatients && setIsDropdownOpen(!isDropdownOpen)}
                             >
-                                <option value="">{loadingPatients ? 'Loading...' : 'Select patient'}</option>
-                                {patients.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name} {p.phone ? `(${p.phone})` : ''}</option>
-                                ))}
-                            </select>
+                                <span style={{ color: !patientId ? '#94a3b8' : 'inherit' }}>
+                                    {loadingPatients
+                                        ? 'Loading...'
+                                        : (patients.find(p => String(p.id) === patientId)?.name || 'Select patient')}
+                                </span>
+                                <span style={{ transition: 'transform 0.2s', transform: isDropdownOpen ? 'rotate(180deg)' : 'none', display: 'flex', alignItems: 'center' }}>
+                                    <FiChevronDown />
+                                </span>
+                            </div>
+
+                            {isDropdownOpen && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    right: 0,
+                                    zIndex: 1000,
+                                    background: '#fff',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '10px',
+                                    marginTop: '5px',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                    overflow: 'hidden'
+                                }}>
+                                    <div style={{ padding: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
+                                        <div className="input-with-icon-simple" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                            <FiSearch style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="Search patient..."
+                                                value={patientSearch}
+                                                onChange={(e) => setPatientSearch(e.target.value)}
+                                                autoFocus
+                                                style={{ paddingLeft: '2.5rem', marginBottom: 0, height: '38px' }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                                        {patients
+                                            .filter(p =>
+                                                p.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
+                                                (p.phone && p.phone.includes(patientSearch))
+                                            )
+                                            .map(p => (
+                                                <div
+                                                    key={p.id}
+                                                    style={{
+                                                        padding: '0.75rem 1rem',
+                                                        cursor: 'pointer',
+                                                        transition: 'background 0.2s',
+                                                        fontSize: '0.9rem',
+                                                        borderBottom: '1px solid #f8fafc'
+                                                    }}
+                                                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                                                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                                    onClick={() => {
+                                                        setPatientId(String(p.id));
+                                                        setIsDropdownOpen(false);
+                                                        setPatientSearch('');
+                                                    }}
+                                                >
+                                                    <div style={{ fontWeight: 600 }}>{p.name}</div>
+                                                    {p.phone && <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{p.phone}</div>}
+                                                </div>
+                                            ))}
+                                        {patients.filter(p =>
+                                            p.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
+                                            (p.phone && p.phone.includes(patientSearch))
+                                        ).length === 0 && (
+                                                <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.875rem' }}>
+                                                    No patients found
+                                                </div>
+                                            )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -184,7 +289,7 @@ const UploadDocuments = () => {
                     <div className="form-group">
                         <label>Document Type</label>
                         <select className="form-control" value={docType} onChange={(e) => setDocType(e.target.value)}>
-                            {DOC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                            {docTypes.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                     </div>
                     <div className="form-group">

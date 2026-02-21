@@ -119,9 +119,69 @@
 /* Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
     margin-bottom: 2.5rem;
+}
+
+@media (max-width: 1400px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Patient Dashboard Specific Responsiveness */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Grid Utilities */
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+
+    .grid-2,
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
 }
 
 .stat-card {
@@ -202,12 +262,24 @@
 }
 
 .card-header {
-    padding: 1.5rem 2rem;
+    padding: 1.25rem 1.5rem;
     border-bottom: 1px solid #F1F5F9;
     background: #FFFFFF;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .card-header {
+        padding: 1rem;
+    }
+
+    .card-header h2 {
+        font-size: 1rem;
+    }
 }
 
 .card-header h2 {
@@ -221,9 +293,18 @@
 }
 
 /* Responsive Table */
-.table-responsive {
+.table-responsive,
+.table-container {
     overflow-x: auto;
     width: 100%;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        border: 1px solid #E2E8F0;
+    }
 }
 
 .data-table {
@@ -234,7 +315,7 @@
 
 .data-table th {
     background: #F8FAFC;
-    padding: 1rem 2rem;
+    padding: 1rem 1.5rem;
     text-align: left;
     font-size: 0.75rem;
     font-weight: 700;
@@ -245,15 +326,23 @@
 }
 
 .data-table td {
-    padding: 1.25rem 2rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid #F1F5F9;
     color: #334155;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     font-weight: 500;
 }
 
 .data-table tr:hover td {
     background: #F8FAFC;
+}
+
+@media (max-width: 768px) {
+
+    .data-table th,
+    .data-table td {
+        padding: 0.875rem 1rem;
+    }
 }
 
 .data-table tr:last-child td {
@@ -375,32 +464,61 @@
     padding-left: 2.75rem;
 }
 
+/* Patient Dashboard Responsive Refinements */
+@media (max-width: 768px) {
+
+    .form-control,
+    .patient-booking-input,
+    .patient-booking-select,
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    select,
+    textarea {
+        width: 100% !important;
+        font-size: 16px !important;
+        /* Prevents auto-zoom on iOS */
+    }
+
+    .dashboard-content {
+        padding: 1rem !important;
+    }
+}
+
 /* Mobile Responsiveness & Utilities */
 @media (max-width: 768px) {
     .dashboard-container {
-        padding: 1rem;
+        padding: 0.75rem;
     }
 
     .page-header {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+        align-items: stretch;
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
     }
 
+    .page-header h1 {
+        font-size: 1.35rem;
+        /* Slightly smaller for mobile */
+    }
+
+    .page-header p {
+        font-size: 0.85rem;
+    }
+
+    .page-header .btn,
     .page-header button {
         width: 100%;
         justify-content: center;
-    }
-
-    .stats-grid {
-        grid-template-columns: 1fr;
-        /* Stack cards on mobile */
+        padding: 0.875rem;
     }
 
     .list-item {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+        align-items: stretch;
+        gap: 1.25rem;
+        padding: 1.25rem 1rem;
     }
 
     .list-item button {
@@ -408,22 +526,79 @@
         justify-content: center;
     }
 
-    .data-table th,
-    .data-table td {
-        padding: 1rem;
+    .table-container,
+    .table-responsive {
+        margin: 0 -0.5rem;
+        /* Allow table to breathe a bit more on tiny screens */
+        width: calc(100% + 1rem);
+    }
+
+    .form-grid.grid-2,
+    .form-grid.grid-3 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    /* Force any flex containers that should stack to stack */
+    .flex-stack-mobile {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .search-box {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .action-btns-header {
+        flex-direction: column;
+        width: 100%;
     }
 }
 
-.mt-lg {
+@media (max-width: 480px) {
+    .dashboard-container {
+        padding: 0.5rem;
+    }
+
+    .stat-card {
+        padding: 1.25rem;
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-info h3 {
+        font-size: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+    }
+}
+
+/* Split Layout Utility */
+.split-layout-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
     margin-top: 2rem;
 }
 
-.mt-xl {
-    margin-top: 3rem;
+/* Auto Grid Utility */
+.auto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+    gap: 1.5rem;
 }
 
-.mb-md {
-    margin-bottom: 1rem;
+@media (max-width: 768px) {
+    .auto-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
 }
 
 /* Premium Modal Styles */
@@ -445,12 +620,21 @@
 .modal-content {
     background: #FFFFFF;
     border-radius: 20px;
-    width: 90%;
-    max-width: 500px;
+    width: 95%;
+    max-width: 550px;
+    max-height: 90vh;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     animation: slideUp 0.3s ease-out;
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 98%;
+        border-radius: 16px;
+    }
 }
 
 @keyframes slideUp {
@@ -504,7 +688,23 @@
 }
 
 .modal-body {
-    padding: 2rem;
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+@media (max-width: 640px) {
+    .modal-header {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .modal-body {
+        padding: 1.25rem;
+    }
+
+    .modal-actions {
+        padding: 1.25rem 1.5rem;
+    }
 }
 
 .modal-actions {
@@ -585,4 +785,49 @@
     filter: none !important;
     transition: none !important;
     outline: none !important;
+}
+
+/* Global Table Styles */
+.table-responsive,
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure form controls are responsive */
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+    max-width: 100%;
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 95% !important;
+        margin: 10px auto;
+        max-height: 95vh !important;
+    }
+
+    .modal-body {
+        padding: 1rem !important;
+    }
+
+    .modal-header h2 {
+        font-size: 1.1rem !important;
+    }
+
+    .stat-card {
+        padding: 1rem !important;
+    }
+
+    .stat-info h3 {
+        font-size: 1.25rem !important;
+    }
 }

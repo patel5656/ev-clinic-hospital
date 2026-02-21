@@ -88,6 +88,13 @@ const ClinicPublicBooking = () => {
         return (
             <div className="booking-success-wrapper fade-in">
                 <div className="success-content text-center card p-40">
+                    {clinic?.logo && (
+                        <img
+                            src={clinic.logo}
+                            alt={clinic.name}
+                            style={{ height: '60px', objectFit: 'contain', display: 'block', margin: '0 auto 1rem' }}
+                        />
+                    )}
                     <FiCheckCircle size={80} color="var(--color-success)" />
                     <h1 className="mt-20">Booking Confirmed!</h1>
                     <p className="text-secondary mt-10">
@@ -99,7 +106,24 @@ const ClinicPublicBooking = () => {
                         <p><strong>Date:</strong> {formData.date}</p>
                         <p><strong>Time:</strong> {formData.time}</p>
                     </div>
-                    <button onClick={() => navigate('/')} className="btn btn-primary mt-30">Back to Home</button>
+                    <button
+                        onClick={() => navigate('/')}
+                        style={{
+                            marginTop: '1.5rem',
+                            padding: '0.6rem 1.5rem',
+                            background: '#f1f5f9',
+                            color: '#334155',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '6px',
+                            fontSize: '0.95rem',
+                            cursor: 'pointer',
+                            outline: 'none',
+                        }}
+                        onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
+                        onMouseOut={e => (e.currentTarget.style.background = '#f1f5f9')}
+                    >
+                        Back to Home
+                    </button>
                 </div>
             </div>
         );

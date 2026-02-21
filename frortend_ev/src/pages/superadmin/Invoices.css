@@ -930,3 +930,15 @@
 .status-select:focus {
     border-color: #2D3BAE;
 }
+
+/* Stable Button - Disables all hover/active effects */
+.btn-no-hover,
+.btn-no-hover:hover,
+.btn-no-hover:active,
+.btn-no-hover:focus {
+    transform: none !important;
+    box-shadow: 0 4px 12px rgba(45, 59, 174, 0.25) !important;
+    filter: none !important;
+    transition: none !important;
+    outline: none !important;
+}

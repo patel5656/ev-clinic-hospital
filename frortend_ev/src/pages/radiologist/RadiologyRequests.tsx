@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiActivity, FiUpload, FiRefreshCw } from 'react-icons/fi';
+import { FiActivity, FiUpload } from 'react-icons/fi';
 import { labService } from '../../services/lab.service';
 import { useToast } from '../../context/ToastContext';
 import Modal from '../../components/Modal';
@@ -10,7 +10,7 @@ const RadiologyRequests = () => {
     const toast = useToast();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [resultText, setResultText] = useState('');
@@ -19,7 +19,7 @@ const RadiologyRequests = () => {
 
     const fetchOrders = async () => {
         try {
-            setRefreshing(true);
+
             const response: any = await labService.getOrders('RADIOLOGY', 'Pending');
             let data = [];
             if (response?.status === 'success' && Array.isArray(response.data)) data = response.data;
@@ -31,7 +31,7 @@ const RadiologyRequests = () => {
             toast.error('Failed to load requests');
         } finally {
             setLoading(false);
-            setRefreshing(false);
+
         }
     };
 
@@ -76,10 +76,7 @@ const RadiologyRequests = () => {
                     <h1>Scan Requests</h1>
                     <p>View and manage pending radiology scan requests.</p>
                 </div>
-                <button className="btn btn-secondary btn-sm btn-with-icon" onClick={fetchOrders} disabled={refreshing}>
-                    <FiRefreshCw className={refreshing ? 'spin' : ''} />
-                    <span>{refreshing ? 'Refreshing...' : 'Refresh Data'}</span>
-                </button>
+
             </div>
 
             <div className="content-section mt-xl">

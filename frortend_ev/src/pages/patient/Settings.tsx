@@ -56,79 +56,83 @@ const PatientSettings = () => {
                 </div>
             </div>
 
-            <div className="card max-w-lg mt-lg">
-                <h3>Change Password</h3>
-                <form onSubmit={handleSubmit} className="mt-md">
-                    {message.text && (
-                        <div className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} mb-md`}>
-                            {message.text}
-                        </div>
-                    )}
+            <div className="content-card" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+                <div className="card-header">
+                    <h2>Change Password</h2>
+                </div>
+                <div className="p-lg">
+                    <form onSubmit={handleSubmit} className="mt-md">
+                        {message.text && (
+                            <div className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} mb-md`}>
+                                {message.text}
+                            </div>
+                        )}
 
-                    <div className="form-group mb-md">
-                        <label>Current Password</label>
-                        <div className="input-with-icon">
-                            <FiLock className="input-icon" />
-                            <input
-                                type="password"
-                                placeholder="Enter current password"
-                                value={passwordData.currentPassword}
-                                onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                required
-                            />
+                        <div className="form-group mb-md">
+                            <label>Current Password</label>
+                            <div className="input-with-icon">
+                                <FiLock className="input-icon" />
+                                <input
+                                    type="password"
+                                    placeholder="Enter current password"
+                                    value={passwordData.currentPassword}
+                                    onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                    required
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="form-group mb-md">
-                        <label>New Password</label>
-                        <div className="input-with-icon">
-                            <FiLock className="input-icon" />
-                            <input
-                                type="password"
-                                placeholder="Enter new password"
-                                value={passwordData.newPassword}
-                                onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                required
-                            />
+                        <div className="form-group mb-md">
+                            <label>New Password</label>
+                            <div className="input-with-icon">
+                                <FiLock className="input-icon" />
+                                <input
+                                    type="password"
+                                    placeholder="Enter new password"
+                                    value={passwordData.newPassword}
+                                    onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                    required
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="form-group mb-lg">
-                        <label>Confirm New Password</label>
-                        <div className="input-with-icon">
-                            <FiLock className="input-icon" />
-                            <input
-                                type="password"
-                                placeholder="Confirm new password"
-                                value={passwordData.confirmPassword}
-                                onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                                required
-                            />
+                        <div className="form-group mb-lg">
+                            <label>Confirm New Password</label>
+                            <div className="input-with-icon">
+                                <FiLock className="input-icon" />
+                                <input
+                                    type="password"
+                                    placeholder="Confirm new password"
+                                    value={passwordData.confirmPassword}
+                                    onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                    required
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <button
-                        type="submit"
-                        className="btn w-full"
-                        disabled={isLoading}
-                        style={{
-                            background: '#0f172a',
-                            color: 'white',
-                            border: 'none',
-                            padding: '12px',
-                            borderRadius: '6px',
-                            cursor: 'default',
-                            width: '100%',
-                            marginTop: '1rem',
-                            pointerEvents: isLoading ? 'none' : 'auto',
-                            opacity: isLoading ? 0.7 : 1
-                        }}
-                        onMouseEnter={(e) => { if (!isLoading) e.currentTarget.style.background = '#0f172a'; }}
-                        onMouseLeave={(e) => { if (!isLoading) e.currentTarget.style.background = '#0f172a'; }}
-                    >
-                        {isLoading ? 'Updating...' : 'Update Password'}
-                    </button>
-                </form>
+                        <button
+                            type="submit"
+                            className="btn w-full"
+                            disabled={isLoading}
+                            style={{
+                                background: '#0f172a',
+                                color: 'white',
+                                border: 'none',
+                                padding: '12px',
+                                borderRadius: '6px',
+                                cursor: 'default',
+                                width: '100%',
+                                marginTop: '1rem',
+                                pointerEvents: isLoading ? 'none' : 'auto',
+                                opacity: isLoading ? 0.7 : 1
+                            }}
+                            onMouseEnter={(e) => { if (!isLoading) e.currentTarget.style.background = '#0f172a'; }}
+                            onMouseLeave={(e) => { if (!isLoading) e.currentTarget.style.background = '#0f172a'; }}
+                        >
+                            {isLoading ? 'Updating...' : 'Update Password'}
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     );

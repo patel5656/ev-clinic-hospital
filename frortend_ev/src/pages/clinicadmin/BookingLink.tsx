@@ -243,9 +243,9 @@ const BookingLink = () => {
             {/* Booking Link Card */}
             <div className="booking-card card">
                 <div
-                    className="card-header cursor-pointer"
-                    onClick={() => bookingUrl && window.open(bookingUrl, '_blank')}
-                    title="Click to open booking link"
+                    className={`card-header ${config.enabled ? 'cursor-pointer' : ''}`}
+                    onClick={() => config.enabled && bookingUrl && window.open(bookingUrl, '_blank')}
+                    title={config.enabled ? "Click to open booking link" : "Booking disabled"}
                 >
                     <div className="link-icon">
                         <FiShare2 size={32} />
@@ -264,7 +264,7 @@ const BookingLink = () => {
                     <button
                         className={`copy-btn ${copied ? 'copied' : ''}`}
                         onClick={copyToClipboard}
-                        disabled={!bookingUrl}
+                        disabled={!bookingUrl || !config.enabled}
                     >
                         {copied ? <FiCheck /> : <FiCopy />}
                         <span>{copied ? 'Copied!' : 'Copy'}</span>
@@ -275,7 +275,7 @@ const BookingLink = () => {
                     <button
                         className="btn btn-secondary btn-with-icon"
                         onClick={() => bookingUrl && window.open(bookingUrl, '_blank')}
-                        disabled={!bookingUrl}
+                        disabled={!bookingUrl || !config.enabled}
                     >
                         <FiExternalLink />
                         <span>Preview Link</span>
@@ -283,7 +283,7 @@ const BookingLink = () => {
                     <button
                         className="btn btn-secondary btn-with-icon"
                         onClick={shareOnWhatsApp}
-                        disabled={!bookingUrl}
+                        disabled={!bookingUrl || !config.enabled}
                     >
                         <FiShare2 />
                         <span>Share on WhatsApp</span>
